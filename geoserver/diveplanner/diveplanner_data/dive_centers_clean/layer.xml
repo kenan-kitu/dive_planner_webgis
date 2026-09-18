@@ -1,0 +1,16 @@
+<layer>
+  <name>dive_centers_clean</name>
+  <id>LayerInfoImpl-5b90620d:1a0aa94e636:-7ff8</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--570ae188:124761b8d78:-7fdf</id>
+  </defaultStyle>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl-5b90620d:1a0aa94e636:-7ff9</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2026-09-16 14:40:15.422 UTC</dateCreated>
+</layer>

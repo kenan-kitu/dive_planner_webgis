@@ -1,0 +1,23 @@
+﻿<dataStore>
+  <id>DataStoreInfoImpl-5b90620d:1a0aa94e636:-7ffe</id>
+  <name>diveplanner_data</name>
+  <description>Florida Keys Dive Planner Data</description>
+  <type>GeoPackage</type>
+  <enabled>true</enabled>
+  <workspace>
+    <id>WorkspaceInfoImpl-5b90620d:1a0aa94e636:-8000</id>
+  </workspace>
+  <connectionParameters class="linked-hash-map">
+    <entry key="dbtype">geopkg</entry>
+    <entry key="database">file:/opt/geoserver_data/dive_planner_data.gpkg</entry>
+    <entry key="namespace">http://diveplanner.local</entry>
+    <entry key="Expose primary keys">false</entry>
+    <entry key="fetch size">1000</entry>
+    <entry key="Batch insert size">1</entry>
+    <entry key="read_only">true</entry>
+    <entry key="immutable">false</entry>
+  </connectionParameters>
+  <__default>false</__default>
+  <dateCreated>2026-09-16 14:25:23.918 UTC</dateCreated>
+  <disableOnConnFailure>false</disableOnConnFailure>
+</dataStore>
