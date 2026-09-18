@@ -33,7 +33,8 @@ export const translations = {
       loadingMapLayers: 'Loading map layers…',
       loadFailed: 'Unable to load GeoServer data',
       layerLoadFailed: 'This layer could not be loaded.',
-      checkGeoServer: 'Check that GeoServer is running at localhost:8080.',
+      checkGeoServer:
+        'Unable to connect to the GeoServer data service. Please try again.',
       tryAgain: 'Try again',
       invalidResponse: 'GeoServer returned invalid GeoJSON.',
       unknownError: 'Unknown request error',
@@ -108,7 +109,8 @@ export const translations = {
       loadingMapLayers: 'Harita katmanları yükleniyor…',
       loadFailed: 'GeoServer verisi yüklenemedi',
       layerLoadFailed: 'Bu katman yüklenemedi.',
-      checkGeoServer: "GeoServer'ın localhost:8080 adresinde çalıştığını kontrol edin.",
+      checkGeoServer:
+        'GeoServer veri servisine bağlanılamadı. Lütfen tekrar deneyin.',
       tryAgain: 'Yeniden dene',
       invalidResponse: 'GeoServer geçersiz GeoJSON döndürdü.',
       unknownError: 'Bilinmeyen istek hatası',
