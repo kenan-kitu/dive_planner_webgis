@@ -164,6 +164,18 @@ select {
   box-shadow: 5px 0 24px rgb(22 67 78 / 8%);
 }
 
+.mobile-sheet__content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.mobile-selection-summary,
+.mobile-sheet-backdrop {
+  display: none;
+}
+
 .desktop-sidebar-heading {
   padding-bottom: 4px;
   border-bottom: 1px solid #d4e2e3;
@@ -224,6 +236,29 @@ select {
   border-radius: 8px;
   outline: 0;
   background: #fff;
+}
+
+.selected-departure {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 9px 10px;
+  color: #315762;
+  border-left: 3px solid #138899;
+  border-radius: 0 7px 7px 0;
+  background: #eef7f7;
+}
+
+.selected-departure small {
+  color: #71878d;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.selected-departure strong {
+  overflow-wrap: anywhere;
+  font-size: 0.7rem;
+  line-height: 1.35;
 }
 
 .planning-field input:focus,
@@ -1348,9 +1383,15 @@ footer strong {
 
 @media (max-width: 760px) {
   .app-shell {
-    height: 100dvh;
-    min-height: 620px;
+    height: 100vh;
+    min-height: 0;
     overflow: hidden;
+  }
+
+  @supports (height: 100dvh) {
+    .app-shell {
+      height: 100dvh;
+    }
   }
 
   .topbar {
@@ -1371,43 +1412,114 @@ footer strong {
 
   .sidebar {
     position: fixed;
-    z-index: 1200;
+    z-index: 1400;
     right: 0;
     bottom: 0;
     left: 0;
     display: flex;
-    gap: 16px;
+    flex-direction: column;
+    gap: 0;
     width: 100%;
-    max-height: min(74dvh, 660px);
-    padding: 0 16px 22px;
-    overflow: auto;
+    height: min(76vh, 680px);
+    max-height: calc(100vh - 88px);
+    padding: 0;
+    overflow: hidden;
     border-right: 0;
     border-top: 1px solid #b9cdcf;
     border-radius: 18px 18px 0 0;
     box-shadow: 0 -14px 34px rgb(7 39 48 / 22%);
     transform: translateY(calc(100% + 24px));
-    transition: transform 180ms ease;
-    overscroll-behavior: contain;
+    visibility: hidden;
+    transition:
+      transform 180ms ease,
+      visibility 0s linear 180ms;
+    pointer-events: none;
+  }
+
+  @supports (height: 100dvh) {
+    .sidebar {
+      height: min(76dvh, 680px);
+      max-height: calc(100dvh - 88px);
+    }
   }
 
   .sidebar.is-mobile-open {
     transform: translateY(0);
+    visibility: visible;
+    transition-delay: 0s;
+    pointer-events: auto;
+  }
+
+  .mobile-sheet-backdrop {
+    position: absolute;
+    z-index: 1300;
+    inset: 0;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: rgb(7 39 48 / 16%);
+    cursor: pointer;
   }
 
   .mobile-panel-header {
-    position: sticky;
-    z-index: 2;
-    top: 0;
+    z-index: 1;
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     min-height: 62px;
-    margin: 0 -16px;
     padding: 10px 16px;
     border-bottom: 1px solid #d5e2e3;
     background: rgb(249 251 251 / 97%);
     backdrop-filter: blur(8px);
+  }
+
+  .mobile-sheet__content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    padding: 14px 16px calc(24px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-padding-block: 14px 32px;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-selection-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+  }
+
+  .mobile-selection-summary > div {
+    min-width: 0;
+    padding: 9px 10px;
+    border: 1px solid #d8e4e5;
+    border-radius: 9px;
+    background: #f4f8f8;
+  }
+
+  .mobile-selection-summary dt {
+    margin-bottom: 3px;
+    color: #71878d;
+    font-size: 0.58rem;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
+
+  .mobile-selection-summary dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: #234b55;
+    font-size: 0.68rem;
+    font-weight: 750;
+    line-height: 1.3;
   }
 
   .mobile-panel-header > div {
@@ -1446,7 +1558,7 @@ footer strong {
   }
 
   .sidebar-section {
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid #ccdadd;
     border-radius: 12px;
     background: #fff;
@@ -1473,12 +1585,15 @@ footer strong {
   }
 
   .sidebar-section__toggle strong {
+    display: -webkit-box;
     overflow: hidden;
     font-size: 0.68rem;
     font-weight: 650;
+    line-height: 1.3;
     text-align: right;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   .sidebar-section__chevron {
@@ -1498,6 +1613,8 @@ footer strong {
   .sidebar-section__body {
     padding: 14px;
     border-top: 1px solid #e0e8e9;
+    border-radius: 0 0 12px 12px;
+    background: #fff;
   }
 
   .planning-panel {
@@ -1509,6 +1626,35 @@ footer strong {
   .planning-panel > header,
   .diver-profile__heading {
     display: none;
+  }
+
+  .planning-field input,
+  .planning-field select,
+  .profile-field input,
+  .profile-field select,
+  .certification-selector select {
+    min-width: 0;
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .planning-field select,
+  .profile-field select,
+  .certification-selector select {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .distance-control input {
+    min-height: 44px;
+  }
+
+  .agency-card,
+  .profile-check,
+  .advanced-certifications summary,
+  .certification-about summary {
+    min-height: 44px;
   }
 
   .results-summary {
@@ -1581,6 +1727,10 @@ footer strong {
   }
 
   .sidebar {
+    border-radius: 16px 16px 0 0;
+  }
+
+  .mobile-sheet__content {
     padding-right: 12px;
     padding-left: 12px;
   }
