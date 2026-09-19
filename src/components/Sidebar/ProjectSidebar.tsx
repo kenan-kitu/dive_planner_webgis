@@ -36,11 +36,33 @@ export function ProjectSidebar({
 
   return (
     <div className="map-controls">
-      <div>
-        <p className="eyebrow">{t.sidebar.eyebrow}</p>
-        <h2>{t.sidebar.title}</h2>
-        <p className="sidebar__intro">{t.sidebar.intro}</p>
-      </div>
+      {hasErrors && (
+        <section className="error-card" role="alert">
+          <h3>{t.status.loadFailed}</h3>
+          <p>{t.status.checkGeoServer}</p>
+          <button type="button" onClick={onRetry}>
+            {t.status.tryAgain}
+          </button>
+        </section>
+      )}
+
+      <section className="layer-control" aria-labelledby="layer-control-title">
+        <h3 id="layer-control-title">{t.sidebar.layerVisibility}</h3>
+        {LAYER_KEYS.map((layer) => (
+          <label key={layer}>
+            <input
+              type="checkbox"
+              checked={visibility[layer]}
+              onChange={() => onToggleLayer(layer)}
+            />
+            <span
+              className={`legend__marker legend__marker--${layer}`}
+              aria-hidden="true"
+            />
+            <span>{t.layers[layer]}</span>
+          </label>
+        ))}
+      </section>
 
       <section className="dataset-card" aria-live="polite">
         <div className="dataset-card__header">
@@ -68,34 +90,6 @@ export function ProjectSidebar({
               </small>
             )}
           </div>
-        ))}
-      </section>
-
-      {hasErrors && (
-        <section className="error-card" role="alert">
-          <h3>{t.status.loadFailed}</h3>
-          <p>{t.status.checkGeoServer}</p>
-          <button type="button" onClick={onRetry}>
-            {t.status.tryAgain}
-          </button>
-        </section>
-      )}
-
-      <section className="layer-control" aria-labelledby="layer-control-title">
-        <h3 id="layer-control-title">{t.sidebar.layerVisibility}</h3>
-        {LAYER_KEYS.map((layer) => (
-          <label key={layer}>
-            <input
-              type="checkbox"
-              checked={visibility[layer]}
-              onChange={() => onToggleLayer(layer)}
-            />
-            <span
-              className={`legend__marker legend__marker--${layer}`}
-              aria-hidden="true"
-            />
-            <span>{t.layers[layer]}</span>
-          </label>
         ))}
       </section>
 
