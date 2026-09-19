@@ -1,7 +1,4 @@
-const GEOSERVER_BASE_URL = import.meta.env.DEV
-  ? '/geoserver'
-  : (import.meta.env.VITE_GEOSERVER_URL ??
-    'https://diveplanner-geoserver.onrender.com/geoserver')
+const GEOSERVER_BASE_URL = '/geoserver'
 
 export const GEOSERVER_CONFIG = {
   baseUrl: GEOSERVER_BASE_URL,

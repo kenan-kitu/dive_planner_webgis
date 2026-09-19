@@ -30,11 +30,12 @@ export const translations = {
     },
     status: {
       loading: 'Loading…',
-      loadingMapLayers: 'Loading map layers…',
-      loadFailed: 'Unable to load GeoServer data',
+      loadingMapLayers:
+        'Map data service is starting. This can take a moment on the first connection.',
+      loadFailed: 'Unable to load map data',
       layerLoadFailed: 'This layer could not be loaded.',
       checkGeoServer:
-        'Unable to connect to the GeoServer data service. Please try again.',
+        'Unable to connect to the map data service. Please try again.',
       tryAgain: 'Try again',
       invalidResponse: 'GeoServer returned invalid GeoJSON.',
       unknownError: 'Unknown request error',
@@ -106,11 +107,12 @@ export const translations = {
     },
     status: {
       loading: 'Yükleniyor…',
-      loadingMapLayers: 'Harita katmanları yükleniyor…',
-      loadFailed: 'GeoServer verisi yüklenemedi',
+      loadingMapLayers:
+        'Harita veri servisi başlatılıyor. İlk bağlantı kısa bir süre alabilir.',
+      loadFailed: 'Harita verisi yüklenemedi',
       layerLoadFailed: 'Bu katman yüklenemedi.',
       checkGeoServer:
-        'GeoServer veri servisine bağlanılamadı. Lütfen tekrar deneyin.',
+        'Harita veri servisine bağlanılamadı. Lütfen tekrar deneyin.',
       tryAgain: 'Yeniden dene',
       invalidResponse: 'GeoServer geçersiz GeoJSON döndürdü.',
       unknownError: 'Bilinmeyen istek hatası',
