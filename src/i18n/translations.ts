@@ -4,7 +4,7 @@ export const translations = {
       title: 'Florida Keys Interactive Dive Planner',
       shortTitle: 'Florida Keys Dive Planner',
       kicker: 'Educational WebGIS',
-      phase: 'Phase 6',
+      phase: 'Phase 7',
       mapAriaLabel: 'Interactive dive-site map',
     },
     language: {
@@ -104,6 +104,10 @@ export const translations = {
       withinSelectedBoatDistance: 'Within selected boat distance',
       reachZoneDisclaimer:
         'Direct-distance visualization — not a safe-navigation or legal-access area.',
+      selectedDiveSite: 'Selected Dive Site',
+      nearbyDiveCenters: 'Nearby Dive Centers',
+      distance: 'Distance',
+      noNearbyDiveCenters: 'No nearby dive centers found',
       matchingDiveSites: 'Matching Dive Sites',
       noDepartureSelected: 'No departure selected',
       directEstimate: 'Direct geodesic estimate – not a navigational route.',
@@ -124,7 +128,7 @@ export const translations = {
       title: 'Florida Keys Etkileşimli Dalış Planlayıcı',
       shortTitle: 'Florida Keys Dalış Planlayıcı',
       kicker: 'Eğitsel WebGIS',
-      phase: 'Faz 6',
+      phase: 'Faz 7',
       mapAriaLabel: 'Etkileşimli dalış noktaları haritası',
     },
     language: {
@@ -168,7 +172,7 @@ export const translations = {
       name: 'Ad',
       category: 'Kategori',
       phone: 'Telefon',
-      website: 'Web sitesi',
+      website: 'Web Sitesi',
       address: 'Adres',
       type: 'Tür',
       operator: 'İşletmeci',
@@ -224,6 +228,10 @@ export const translations = {
       withinSelectedBoatDistance: 'Seçilen tekne mesafesi içinde',
       reachZoneDisclaimer:
         'Doğrudan mesafe görselleştirmesidir — güvenli seyir veya yasal erişim alanı değildir.',
+      selectedDiveSite: 'Seçilen Dalış Noktası',
+      nearbyDiveCenters: 'Yakındaki Dalış Merkezleri',
+      distance: 'Mesafe',
+      noNearbyDiveCenters: 'Yakında dalış merkezi bulunamadı',
       matchingDiveSites: 'Eşleşen Dalış Noktaları',
       noDepartureSelected: 'Kalkış noktası seçilmedi',
       directEstimate: 'Doğrudan jeodezik mesafe tahminidir – seyir rotası değildir.',

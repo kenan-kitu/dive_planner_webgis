@@ -3,6 +3,7 @@ import { DiverProfile } from './components/Certification/DiverProfile'
 import { LanguageSwitcher } from './components/LanguageSwitcher/LanguageSwitcher'
 import { DiveMap } from './components/Map/DiveMap'
 import { PlanningPanel } from './components/Planning/PlanningPanel'
+import { NearbyDiveCenters } from './components/Planning/NearbyDiveCenters'
 import { ResultsSummary } from './components/Planning/ResultsSummary'
 import { ProjectSidebar } from './components/Sidebar/ProjectSidebar'
 import { SidebarSection } from './components/Sidebar/SidebarSection'
@@ -24,7 +25,7 @@ import {
   getEffectiveDepthLimit,
   type DiverProfile as DiverProfileValue,
 } from './utils/certification'
-import { calculateDistanceNm } from './utils/spatial'
+import { calculateDistanceNm, findNearestPoints } from './utils/spatial'
 
 export type MapLayerKey = 'diveSites' | 'diveCenters' | 'departurePoints'
 export type LayerState<T> = Record<MapLayerKey, T>
@@ -210,6 +211,20 @@ function App() {
     return { matching, depth, distance }
   }, [siteAnalysis])
   const totalSiteCount = diveSites?.features.length ?? 0
+  const nearbyDiveCenters = useMemo(
+    () =>
+      selectedDiveSite && diveCenters
+        ? findNearestPoints(selectedDiveSite, diveCenters.features, 3)
+        : [],
+    [diveCenters, selectedDiveSite],
+  )
+  const nearbyDiveCenterIds = useMemo(
+    () =>
+      new Set(
+        nearbyDiveCenters.map(({ feature }) => feature.properties.record_id),
+      ),
+    [nearbyDiveCenters],
+  )
   const selectedDiveSiteDistanceNm = selectedDiveSite
     ? (siteAnalysis.get(selectedDiveSite)?.distanceNm ?? null)
     : null
@@ -335,6 +350,13 @@ function App() {
               />
             </SidebarSection>
 
+            {selectedDiveSite && (
+              <NearbyDiveCenters
+                selectedDiveSiteName={selectedDiveSite.properties.site_name}
+                centers={nearbyDiveCenters}
+              />
+            )}
+
             <ResultsSummary
               totalSiteCount={totalSiteCount}
               matchingSiteCount={resultCounts.matching}
@@ -384,6 +406,7 @@ function App() {
             analysisKey={filterKey}
             selectedDeparture={selectedDeparture}
             selectedDiveSite={selectedDiveSite}
+            nearbyDiveCenterIds={nearbyDiveCenterIds}
             maximumDistanceNm={maximumDistanceNm}
             boatSpeedKnots={boatSpeedKnots}
             onSelectDeparture={setSelectedDepartureId}
