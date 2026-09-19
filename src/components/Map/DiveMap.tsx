@@ -1,4 +1,5 @@
 import { divIcon, marker, type Layer } from 'leaflet'
+import { useMemo } from 'react'
 import { GeoJSON, MapContainer, TileLayer, ZoomControl } from 'react-leaflet'
 import type { LayerState } from '../../App'
 import { certificationTranslations } from '../../i18n/certificationTranslations'
@@ -13,6 +14,11 @@ import type {
   DiveSiteCollection,
   DiveSiteFeature,
 } from '../../types/gis'
+import {
+  calculateTravelTimeMinutes,
+  createDirectRouteLine,
+  createReachZone,
+} from '../../utils/spatial'
 
 interface DiveMapProps {
   diveSites: DiveSiteCollection | null
@@ -22,7 +28,11 @@ interface DiveMapProps {
   siteAnalysis: ReadonlyMap<DiveSiteFeature, DiveSiteAnalysis>
   analysisKey: string
   selectedDeparture: DeparturePointFeature | null
+  selectedDiveSite: DiveSiteFeature | null
+  maximumDistanceNm: number
+  boatSpeedKnots: number
   onSelectDeparture: (recordId: number) => void
+  onSelectDiveSite: (site: DiveSiteFeature) => void
 }
 
 const FLORIDA_KEYS_CENTER: [number, number] = [24.72, -81.1]
@@ -160,10 +170,28 @@ export function DiveMap({
   siteAnalysis,
   analysisKey,
   selectedDeparture,
+  selectedDiveSite,
+  maximumDistanceNm,
+  boatSpeedKnots,
   onSelectDeparture,
+  onSelectDiveSite,
 }: DiveMapProps) {
   const { language, t } = useLanguage()
   const certificationCopy = certificationTranslations[language]
+  const reachZone = useMemo(
+    () =>
+      selectedDeparture
+        ? createReachZone(selectedDeparture, maximumDistanceNm)
+        : null,
+    [maximumDistanceNm, selectedDeparture],
+  )
+  const directRoute = useMemo(
+    () =>
+      selectedDeparture && selectedDiveSite
+        ? createDirectRouteLine(selectedDeparture, selectedDiveSite)
+        : null,
+    [selectedDeparture, selectedDiveSite],
+  )
 
   return (
     <MapContainer
@@ -184,6 +212,47 @@ export function DiveMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
+      {reachZone && (
+        <GeoJSON
+          key={`reach-zone-${selectedDeparture?.properties.record_id}-${maximumDistanceNm}`}
+          data={reachZone}
+          style={{
+            className: 'reach-zone-path',
+            color: '#147d8c',
+            weight: 1.5,
+            opacity: 0.72,
+            fillColor: '#35aab5',
+            fillOpacity: 0.1,
+          }}
+          onEachFeature={(_, layer: Layer) => {
+            layer.bindTooltip(
+              `${escapeHtml(t.planning.reachZone)} · ${maximumDistanceNm} NM`,
+              { sticky: true },
+            )
+          }}
+        />
+      )}
+
+      {directRoute && (
+        <GeoJSON
+          key={`direct-route-${selectedDeparture?.properties.record_id}-${selectedDiveSite?.properties.site_name}`}
+          data={directRoute}
+          style={{
+            className: 'direct-route-path',
+            color: '#f07832',
+            weight: 3,
+            opacity: 0.92,
+            dashArray: '8 7',
+          }}
+          onEachFeature={(_, layer: Layer) => {
+            layer.bindTooltip(
+              `<strong>${escapeHtml(t.planning.directBoatRouteEstimate)}</strong><br>${escapeHtml(t.planning.directRouteDisclaimer)}`,
+              { sticky: true },
+            )
+          }}
+        />
+      )}
 
       {visibility.departurePoints && departurePoints && (
         <GeoJSON
@@ -287,11 +356,15 @@ export function DiveMap({
                 ? `
                   ${popupRow(t.planning.departurePoint, selectedDeparture.properties.name)}
                   ${popupRow(t.planning.directBoatDistance, `${result.distanceNm.toFixed(1)} NM`)}
+                  ${popupRow(t.planning.boatSpeed, `${boatSpeedKnots} ${t.planning.knotAbbreviation}`)}
+                  ${popupRow(t.planning.estimatedTravelTime, `${calculateTravelTimeMinutes(result.distanceNm, boatSpeedKnots)} ${t.planning.minutes}`)}
                 `
                 : ''
             const distanceDisclaimer = selectedDeparture
-              ? `<p class="site-popup__notice">${escapeHtml(t.planning.directEstimate)}</p>`
+              ? `<p class="site-popup__notice"><strong>${escapeHtml(t.planning.directBoatRouteEstimate)}</strong><br>${escapeHtml(t.planning.directRouteDisclaimer)}</p>`
               : ''
+
+            layer.on('click', () => onSelectDiveSite(site))
 
             layer.bindPopup(`
               <article class="site-popup">

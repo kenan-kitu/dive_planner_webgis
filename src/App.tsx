@@ -54,6 +54,7 @@ const INITIAL_DIVER_PROFILE: DiverProfileValue = {
 
 const DEFAULT_MAXIMUM_DISTANCE_NM = 10
 const MAXIMUM_DISTANCE_SLIDER_NM = 30
+const DEFAULT_BOAT_SPEED_KNOTS = 20
 
 function errorDetails(error: unknown): string {
   return error instanceof Error ? error.message : 'UNKNOWN_ERROR'
@@ -82,6 +83,11 @@ function App() {
   const [maximumDistanceNm, setMaximumDistanceNm] = useState(
     DEFAULT_MAXIMUM_DISTANCE_NM,
   )
+  const [boatSpeedKnots, setBoatSpeedKnots] = useState(
+    DEFAULT_BOAT_SPEED_KNOTS,
+  )
+  const [selectedDiveSite, setSelectedDiveSite] =
+    useState<DiveSiteFeature | null>(null)
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false)
 
   const retry = useCallback(() => {
@@ -204,6 +210,9 @@ function App() {
     return { matching, depth, distance }
   }, [siteAnalysis])
   const totalSiteCount = diveSites?.features.length ?? 0
+  const selectedDiveSiteDistanceNm = selectedDiveSite
+    ? (siteAnalysis.get(selectedDiveSite)?.distanceNm ?? null)
+    : null
   const selectedSiteTypeLabel = selectedSiteType
     ? (t.dataValues[
         selectedSiteType.toLowerCase() as 'reef' | 'wreck' | 'wall'
@@ -214,6 +223,7 @@ function App() {
     selectedSiteType ?? 'all',
     selectedDepartureId ?? 'none',
     maximumDistanceNm,
+    boatSpeedKnots,
   ].join('-')
 
   return (
@@ -280,6 +290,12 @@ function App() {
                 <dt>{t.planning.maximumBoatDistance}</dt>
                 <dd>{maximumDistanceNm} NM</dd>
               </div>
+              <div>
+                <dt>{t.planning.boatSpeed}</dt>
+                <dd>
+                  {boatSpeedKnots} {t.planning.knotAbbreviation}
+                </dd>
+              </div>
             </dl>
 
             <SidebarSection
@@ -297,7 +313,7 @@ function App() {
 
             <SidebarSection
               title={t.planning.divePlanning}
-              summary={`${selectedSiteTypeLabel} · ${selectedDeparture?.properties.name ?? t.planning.noDepartureSelected} · ${maximumDistanceNm} NM`}
+              summary={`${selectedSiteTypeLabel} · ${selectedDeparture?.properties.name ?? t.planning.noDepartureSelected} · ${maximumDistanceNm} NM · ${boatSpeedKnots} ${t.planning.knotAbbreviation}`}
               initiallyOpen
             >
               <PlanningPanel
@@ -307,9 +323,15 @@ function App() {
                 selectedSiteType={selectedSiteType}
                 maximumDistanceNm={maximumDistanceNm}
                 maximumSliderDistanceNm={MAXIMUM_DISTANCE_SLIDER_NM}
+                boatSpeedKnots={boatSpeedKnots}
+                selectedDiveSiteName={
+                  selectedDiveSite?.properties.site_name ?? null
+                }
+                selectedDiveSiteDistanceNm={selectedDiveSiteDistanceNm}
                 onDepartureChange={setSelectedDepartureId}
                 onSiteTypeChange={setSelectedSiteType}
                 onMaximumDistanceChange={setMaximumDistanceNm}
+                onBoatSpeedChange={setBoatSpeedKnots}
               />
             </SidebarSection>
 
@@ -361,7 +383,11 @@ function App() {
             siteAnalysis={siteAnalysis}
             analysisKey={filterKey}
             selectedDeparture={selectedDeparture}
+            selectedDiveSite={selectedDiveSite}
+            maximumDistanceNm={maximumDistanceNm}
+            boatSpeedKnots={boatSpeedKnots}
             onSelectDeparture={setSelectedDepartureId}
+            onSelectDiveSite={setSelectedDiveSite}
           />
           {isAnythingLoading && (
             <div className="map-message">{t.status.loadingMapLayers}</div>

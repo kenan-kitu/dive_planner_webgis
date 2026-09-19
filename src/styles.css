@@ -313,6 +313,109 @@ select {
   opacity: 0.45;
 }
 
+.reach-zone-note {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  color: #315d66;
+  border: 1px solid #badadd;
+  border-left: 4px solid #35aab5;
+  border-radius: 9px;
+  background: #eff9f9;
+}
+
+.reach-zone-note strong {
+  font-size: 0.72rem;
+}
+
+.reach-zone-note span,
+.reach-zone-note small {
+  font-size: 0.61rem;
+  line-height: 1.4;
+}
+
+.reach-zone-note small {
+  color: #71878d;
+}
+
+.boat-speed-control {
+  background: #f4f7fb;
+}
+
+.trip-summary {
+  overflow: hidden;
+  color: #2b515b;
+  border: 1px solid #cbdcdf;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.trip-summary > header {
+  display: grid;
+  gap: 3px;
+  padding: 11px 12px;
+  color: #fff;
+  background: #126f7c;
+}
+
+.trip-summary > header span {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.trip-summary > header strong {
+  font-size: 0.76rem;
+}
+
+.trip-summary dl {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 11px 12px;
+}
+
+.trip-summary dl div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.trip-summary dt,
+.trip-summary dd {
+  font-size: 0.65rem;
+}
+
+.trip-summary dt {
+  color: #71878d;
+}
+
+.trip-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 750;
+  text-align: right;
+}
+
+.trip-summary > p {
+  margin: 0;
+  padding: 9px 12px;
+  color: #6a8086;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  border-top: 1px solid #e1e9ea;
+  background: #f6f9f9;
+}
+
+.reach-zone-path {
+  pointer-events: auto;
+}
+
+.direct-route-path {
+  filter: drop-shadow(0 1px 2px rgb(87 49 23 / 35%));
+}
+
 .results-summary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
