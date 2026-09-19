@@ -4,6 +4,7 @@ import type {
   DeparturePointCollection,
   DeparturePointFeature,
 } from '../../types/gis'
+import { calculateTravelTimeMinutes } from '../../utils/spatial'
 
 interface PlanningPanelProps {
   departurePoints: DeparturePointCollection | null
@@ -12,9 +13,13 @@ interface PlanningPanelProps {
   selectedSiteType: string | null
   maximumDistanceNm: number
   maximumSliderDistanceNm: number
+  boatSpeedKnots: number
+  selectedDiveSiteName: string | null
+  selectedDiveSiteDistanceNm: number | null
   onDepartureChange: (recordId: number | null) => void
   onSiteTypeChange: (siteType: string | null) => void
   onMaximumDistanceChange: (distanceNm: number) => void
+  onBoatSpeedChange: (speedKnots: number) => void
 }
 
 const GENERIC_DEPARTURE_NAME = /^(boat ramp|boat launch|marina|dock|pier|unnamed)/i
@@ -43,9 +48,13 @@ export function PlanningPanel({
   selectedSiteType,
   maximumDistanceNm,
   maximumSliderDistanceNm,
+  boatSpeedKnots,
+  selectedDiveSiteName,
+  selectedDiveSiteDistanceNm,
   onDepartureChange,
   onSiteTypeChange,
   onMaximumDistanceChange,
+  onBoatSpeedChange,
 }: PlanningPanelProps) {
   const { t } = useLanguage()
   const [search, setSearch] = useState('')
@@ -90,6 +99,10 @@ export function PlanningPanel({
   const selectedDepartureName = departurePoints?.features.find(
     (departure) => departure.properties.record_id === selectedDepartureId,
   )?.properties.name
+  const travelTimeMinutes =
+    selectedDiveSiteDistanceNm === null
+      ? null
+      : calculateTravelTimeMinutes(selectedDiveSiteDistanceNm, boatSpeedKnots)
 
   return (
     <section className="planning-panel" aria-labelledby="planning-panel-title">
@@ -199,6 +212,69 @@ export function PlanningPanel({
             : `1–${maximumSliderDistanceNm} ${t.planning.nauticalMiles}`}
         </small>
       </label>
+
+      {selectedDepartureId !== null && (
+        <aside className="reach-zone-note">
+          <strong>
+            {t.planning.reachZone}: {maximumDistanceNm} NM
+          </strong>
+          <span>{t.planning.withinSelectedBoatDistance}</span>
+          <small>{t.planning.reachZoneDisclaimer}</small>
+        </aside>
+      )}
+
+      <label className="distance-control boat-speed-control">
+        <span>
+          {t.planning.boatSpeed}
+          <strong>
+            {boatSpeedKnots} {t.planning.knotAbbreviation}
+          </strong>
+        </span>
+        <input
+          type="range"
+          min="5"
+          max="50"
+          step="1"
+          value={boatSpeedKnots}
+          onChange={(event) => onBoatSpeedChange(Number(event.target.value))}
+        />
+        <small>5–50 {t.planning.knots}</small>
+      </label>
+
+      {selectedDepartureName &&
+        selectedDiveSiteName &&
+        selectedDiveSiteDistanceNm !== null &&
+        travelTimeMinutes !== null && (
+          <section className="trip-summary" aria-live="polite">
+            <header>
+              <span>{t.planning.directBoatRouteEstimate}</span>
+              <strong>{selectedDiveSiteName}</strong>
+            </header>
+            <dl>
+              <div>
+                <dt>{t.planning.departurePoint}</dt>
+                <dd>{selectedDepartureName}</dd>
+              </div>
+              <div>
+                <dt>{t.planning.directBoatDistance}</dt>
+                <dd>{selectedDiveSiteDistanceNm.toFixed(1)} NM</dd>
+              </div>
+              <div>
+                <dt>{t.planning.boatSpeed}</dt>
+                <dd>
+                  {boatSpeedKnots} {t.planning.knotAbbreviation}
+                </dd>
+              </div>
+              <div>
+                <dt>{t.planning.estimatedTravelTime}</dt>
+                <dd>
+                  {travelTimeMinutes} {t.planning.minutes}
+                </dd>
+              </div>
+            </dl>
+            <p>{t.planning.directRouteDisclaimer}</p>
+          </section>
+        )}
     </section>
   )
 }
