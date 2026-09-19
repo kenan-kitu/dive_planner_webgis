@@ -5,6 +5,7 @@ import {
   calculateTravelTimeMinutes,
   createDirectRouteLine,
   createReachZone,
+  findNearestPoints,
   filterSitesByDistance,
   nauticalMilesToKilometers,
 } from '../src/utils/spatial.ts'
@@ -64,4 +65,31 @@ const tenNmEdge = pointFeature(...tenNmZone.geometry.coordinates[0][0])
 assert.ok(Math.abs(calculateDistanceNm(departure, fiveNmEdge) - 5) < 0.05)
 assert.ok(Math.abs(calculateDistanceNm(departure, tenNmEdge) - 10) < 0.05)
 
-console.log('Spatial verification: 11/11 checks passed.')
+const candidateCenters = [
+  { ...pointFeature(-81, 24.01), properties: { name: 'A', nearest_dive_m: 999_999 } },
+  { ...pointFeature(-81, 24.02), properties: { name: 'B', nearest_dive_m: 1 } },
+  { ...pointFeature(-81, 24.03), properties: { name: 'C', nearest_dive_m: 2 } },
+  { ...pointFeature(-81, 24.04), properties: { name: 'D', nearest_dive_m: 3 } },
+]
+const nearestFromSouth = findNearestPoints(departure, candidateCenters)
+assert.equal(nearestFromSouth.length, 3)
+assert.deepEqual(
+  nearestFromSouth.map(({ feature }) => feature.properties.name),
+  ['A', 'B', 'C'],
+)
+assert.ok(
+  nearestFromSouth.every(
+    (result, index) =>
+      index === 0 ||
+      nearestFromSouth[index - 1].distanceNm <= result.distanceNm,
+  ),
+)
+const northernOrigin = pointFeature(-81, 24.05)
+assert.deepEqual(
+  findNearestPoints(northernOrigin, candidateCenters).map(
+    ({ feature }) => feature.properties.name,
+  ),
+  ['D', 'C', 'B'],
+)
+
+console.log('Spatial verification: 15/15 checks passed.')

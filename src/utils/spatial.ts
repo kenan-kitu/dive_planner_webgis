@@ -11,6 +11,11 @@ const KILOMETERS_PER_NAUTICAL_MILE = 1.852
 
 type PointFeature = Feature<Point>
 
+export interface DistanceResult<T extends PointFeature> {
+  feature: T
+  distanceNm: number
+}
+
 export function nauticalMilesToKilometers(distanceNm: number): number {
   return distanceNm * KILOMETERS_PER_NAUTICAL_MILE
 }
@@ -70,4 +75,20 @@ export function filterSitesByDistance<T extends PointFeature>(
     (site) =>
       calculateDistanceNm(departurePoint, site) <= maximumDistanceNm,
   )
+}
+
+export function findNearestPoints<T extends PointFeature>(
+  origin: PointFeature,
+  candidates: readonly T[],
+  limit = 3,
+): DistanceResult<T>[] {
+  if (limit <= 0) return []
+
+  return candidates
+    .map((feature) => ({
+      feature,
+      distanceNm: calculateDistanceNm(origin, feature),
+    }))
+    .sort((first, second) => first.distanceNm - second.distanceNm)
+    .slice(0, limit)
 }
