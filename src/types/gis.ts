@@ -18,6 +18,14 @@ export interface DiveSiteProperties {
 export type DiveSiteFeature = Feature<Point, DiveSiteProperties>
 export type DiveSiteCollection = FeatureCollection<Point, DiveSiteProperties>
 
+export interface DiveSiteAnalysis {
+  distanceNm: number | null
+  matchesDepth: boolean
+  matchesType: boolean
+  matchesDistance: boolean
+  isFullMatch: boolean
+}
+
 export interface DiveCenterProperties {
   record_id: number
   name: string

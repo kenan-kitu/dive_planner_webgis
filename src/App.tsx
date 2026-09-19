@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { DiverProfile } from './components/Certification/DiverProfile'
 import { LanguageSwitcher } from './components/LanguageSwitcher/LanguageSwitcher'
 import { DiveMap } from './components/Map/DiveMap'
+import { PlanningPanel } from './components/Planning/PlanningPanel'
+import { ResultsSummary } from './components/Planning/ResultsSummary'
 import { ProjectSidebar } from './components/Sidebar/ProjectSidebar'
+import { SidebarSection } from './components/Sidebar/SidebarSection'
+import { getCertificationById } from './config/certifications'
 import { useLanguage } from './i18n/LanguageContext'
 import {
   fetchDeparturePoints,
@@ -11,6 +15,8 @@ import {
 } from './services/geoserver'
 import type {
   DeparturePointCollection,
+  DiveSiteAnalysis,
+  DiveSiteFeature,
   DiveCenterCollection,
   DiveSiteCollection,
 } from './types/gis'
@@ -18,6 +24,7 @@ import {
   getEffectiveDepthLimit,
   type DiverProfile as DiverProfileValue,
 } from './utils/certification'
+import { calculateDistanceNm } from './utils/spatial'
 
 export type MapLayerKey = 'diveSites' | 'diveCenters' | 'departurePoints'
 export type LayerState<T> = Record<MapLayerKey, T>
@@ -45,6 +52,9 @@ const INITIAL_DIVER_PROFILE: DiverProfileValue = {
   certificationId: 'padi-open-water',
 }
 
+const DEFAULT_MAXIMUM_DISTANCE_NM = 10
+const MAXIMUM_DISTANCE_SLIDER_NM = 30
+
 function errorDetails(error: unknown): string {
   return error instanceof Error ? error.message : 'UNKNOWN_ERROR'
 }
@@ -65,6 +75,14 @@ function App() {
   const [diverProfile, setDiverProfile] = useState<DiverProfileValue>(
     INITIAL_DIVER_PROFILE,
   )
+  const [selectedDepartureId, setSelectedDepartureId] = useState<number | null>(
+    null,
+  )
+  const [selectedSiteType, setSelectedSiteType] = useState<string | null>(null)
+  const [maximumDistanceNm, setMaximumDistanceNm] = useState(
+    DEFAULT_MAXIMUM_DISTANCE_NM,
+  )
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false)
 
   const retry = useCallback(() => {
     setRequestVersion((version) => version + 1)
@@ -115,12 +133,83 @@ function App() {
 
   const isAnythingLoading = Object.values(loading).some(Boolean)
   const effectiveDepthLimit = getEffectiveDepthLimit(diverProfile)
-  const matchingSiteCount =
-    diveSites?.features.filter((site) => {
-      if (effectiveDepthLimit === null) return true
+  const selectedCertification = getCertificationById(
+    diverProfile.certificationId,
+  )
+  const selectedDeparture = useMemo(
+    () =>
+      departurePoints?.features.find(
+        (departure) =>
+          departure.properties.record_id === selectedDepartureId,
+      ) ?? null,
+    [departurePoints, selectedDepartureId],
+  )
+  const siteTypes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (diveSites?.features ?? [])
+            .map((site) => site.properties.site_type)
+            .filter((siteType): siteType is string => Boolean(siteType)),
+        ),
+      ).sort(),
+    [diveSites],
+  )
+  const siteAnalysis = useMemo(() => {
+    const analysis = new Map<DiveSiteFeature, DiveSiteAnalysis>()
+
+    for (const site of diveSites?.features ?? []) {
       const maximumDepth = site.properties.max_depth_m
-      return maximumDepth !== null && maximumDepth <= effectiveDepthLimit
-    }).length ?? 0
+      const matchesDepth =
+        effectiveDepthLimit === null ||
+        (maximumDepth !== null && maximumDepth <= effectiveDepthLimit)
+      const matchesType =
+        selectedSiteType === null ||
+        site.properties.site_type?.toLowerCase() ===
+          selectedSiteType.toLowerCase()
+      const distanceNm = selectedDeparture
+        ? calculateDistanceNm(selectedDeparture, site)
+        : null
+      const matchesDistance =
+        distanceNm === null || distanceNm <= maximumDistanceNm
+
+      analysis.set(site, {
+        distanceNm,
+        matchesDepth,
+        matchesType,
+        matchesDistance,
+        isFullMatch: matchesDepth && matchesType && matchesDistance,
+      })
+    }
+
+    return analysis
+  }, [
+    diveSites,
+    effectiveDepthLimit,
+    maximumDistanceNm,
+    selectedDeparture,
+    selectedSiteType,
+  ])
+  const resultCounts = useMemo(() => {
+    let matching = 0
+    let depth = 0
+    let distance = 0
+
+    for (const result of siteAnalysis.values()) {
+      if (result.isFullMatch) matching += 1
+      if (result.matchesDepth) depth += 1
+      if (result.matchesDistance) distance += 1
+    }
+
+    return { matching, depth, distance }
+  }, [siteAnalysis])
+  const totalSiteCount = diveSites?.features.length ?? 0
+  const filterKey = [
+    effectiveDepthLimit ?? 'none',
+    selectedSiteType ?? 'all',
+    selectedDepartureId ?? 'none',
+    maximumDistanceNm,
+  ].join('-')
 
   return (
     <div className="app-shell">
@@ -139,26 +228,95 @@ function App() {
       </header>
 
       <main className="workspace">
-        <aside className="sidebar">
-          <DiverProfile
-            profile={diverProfile}
-            effectiveDepthLimit={effectiveDepthLimit}
-            matchingSiteCount={matchingSiteCount}
-            totalSiteCount={diveSites?.features.length ?? 0}
-            onChange={setDiverProfile}
+        <aside
+          className={`sidebar${isMobilePanelOpen ? ' is-mobile-open' : ''}`}
+          id="planning-panel"
+          aria-label={t.planning.planning}
+        >
+          <div className="mobile-panel-header">
+            <div>
+              <small>{t.planning.results}</small>
+              <strong>
+                {resultCounts.matching} {t.planning.matchingDiveSites}
+              </strong>
+            </div>
+            <button
+              type="button"
+              aria-label={t.planning.closeFilters}
+              onClick={() => setIsMobilePanelOpen(false)}
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="desktop-sidebar-heading">
+            <p className="eyebrow">{t.planning.planning}</p>
+            <h2>{t.app.shortTitle}</h2>
+          </div>
+
+          <SidebarSection
+            title={t.planning.certification}
+            summary={`${diverProfile.agency} · ${selectedCertification?.name ?? ''}`}
+          >
+            <DiverProfile
+              profile={diverProfile}
+              effectiveDepthLimit={effectiveDepthLimit}
+              matchingSiteCount={resultCounts.matching}
+              totalSiteCount={totalSiteCount}
+              onChange={setDiverProfile}
+            />
+          </SidebarSection>
+
+          <SidebarSection
+            title={t.planning.divePlanning}
+            summary={
+              selectedDeparture?.properties.name ??
+              t.planning.noDepartureSelected
+            }
+            initiallyOpen
+          >
+            <PlanningPanel
+              departurePoints={departurePoints}
+              siteTypes={siteTypes}
+              selectedDepartureId={selectedDepartureId}
+              selectedSiteType={selectedSiteType}
+              maximumDistanceNm={maximumDistanceNm}
+              maximumSliderDistanceNm={MAXIMUM_DISTANCE_SLIDER_NM}
+              onDepartureChange={setSelectedDepartureId}
+              onSiteTypeChange={setSelectedSiteType}
+              onMaximumDistanceChange={setMaximumDistanceNm}
+            />
+          </SidebarSection>
+
+          <ResultsSummary
+            totalSiteCount={totalSiteCount}
+            matchingSiteCount={resultCounts.matching}
+            depthMatchCount={resultCounts.depth}
+            distanceMatchCount={
+              selectedDeparture ? resultCounts.distance : null
+            }
+            selectedDepartureName={
+              selectedDeparture?.properties.name ?? null
+            }
           />
-          <ProjectSidebar
-            counts={{
-              diveSites: diveSites?.features.length ?? 0,
-              diveCenters: diveCenters?.features.length ?? 0,
-              departurePoints: departurePoints?.features.length ?? 0,
-            }}
-            loading={loading}
-            errors={errors}
-            visibility={visibility}
-            onToggleLayer={toggleLayer}
-            onRetry={retry}
-          />
+
+          <SidebarSection
+            title={t.planning.mapLayers}
+            summary={`${diveSites?.features.length ?? 0} · ${diveCenters?.features.length ?? 0} · ${departurePoints?.features.length ?? 0}`}
+          >
+            <ProjectSidebar
+              counts={{
+                diveSites: totalSiteCount,
+                diveCenters: diveCenters?.features.length ?? 0,
+                departurePoints: departurePoints?.features.length ?? 0,
+              }}
+              loading={loading}
+              errors={errors}
+              visibility={visibility}
+              onToggleLayer={toggleLayer}
+              onRetry={retry}
+            />
+          </SidebarSection>
         </aside>
         <section className="map-panel" aria-label={t.app.mapAriaLabel}>
           <DiveMap
@@ -166,15 +324,31 @@ function App() {
             diveCenters={diveCenters}
             departurePoints={departurePoints}
             visibility={visibility}
-            effectiveDepthLimit={effectiveDepthLimit}
+            siteAnalysis={siteAnalysis}
+            analysisKey={filterKey}
+            selectedDeparture={selectedDeparture}
+            onSelectDeparture={setSelectedDepartureId}
           />
           {isAnythingLoading && (
             <div className="map-message">{t.status.loadingMapLayers}</div>
           )}
         </section>
+        <button
+          className="mobile-filter-toggle"
+          type="button"
+          aria-controls="planning-panel"
+          aria-expanded={isMobilePanelOpen}
+          onClick={() => setIsMobilePanelOpen(true)}
+        >
+          <span>{t.planning.openFilters}</span>
+          <strong>{resultCounts.matching}</strong>
+        </button>
       </main>
 
-      <footer>{t.disclaimer}</footer>
+      <footer>
+        <span>{t.disclaimer}</span>
+        <strong>{t.credit}</strong>
+      </footer>
     </div>
   )
 }
