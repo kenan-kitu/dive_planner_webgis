@@ -204,6 +204,11 @@ function App() {
     return { matching, depth, distance }
   }, [siteAnalysis])
   const totalSiteCount = diveSites?.features.length ?? 0
+  const selectedSiteTypeLabel = selectedSiteType
+    ? (t.dataValues[
+        selectedSiteType.toLowerCase() as 'reef' | 'wreck' | 'wall'
+      ] ?? selectedSiteType)
+    : t.planning.allDiveTypes
   const filterKey = [
     effectiveDepthLimit ?? 'none',
     selectedSiteType ?? 'all',
@@ -249,75 +254,104 @@ function App() {
             </button>
           </div>
 
-          <div className="desktop-sidebar-heading">
-            <p className="eyebrow">{t.planning.planning}</p>
-            <h2>{t.app.shortTitle}</h2>
-          </div>
+          <div className="mobile-sheet__content">
+            <div className="desktop-sidebar-heading">
+              <p className="eyebrow">{t.planning.planning}</p>
+              <h2>{t.app.shortTitle}</h2>
+            </div>
 
-          <SidebarSection
-            title={t.planning.certification}
-            summary={`${diverProfile.agency} · ${selectedCertification?.name ?? ''}`}
-          >
-            <DiverProfile
-              profile={diverProfile}
-              effectiveDepthLimit={effectiveDepthLimit}
-              matchingSiteCount={resultCounts.matching}
+            <dl className="mobile-selection-summary">
+              <div>
+                <dt>{t.planning.certification}</dt>
+                <dd>{`${diverProfile.agency} ${selectedCertification?.name ?? ''}`}</dd>
+              </div>
+              <div>
+                <dt>{t.planning.diveType}</dt>
+                <dd>{selectedSiteTypeLabel}</dd>
+              </div>
+              <div>
+                <dt>{t.planning.departurePoint}</dt>
+                <dd>
+                  {selectedDeparture?.properties.name ??
+                    t.planning.noDepartureSelected}
+                </dd>
+              </div>
+              <div>
+                <dt>{t.planning.maximumBoatDistance}</dt>
+                <dd>{maximumDistanceNm} NM</dd>
+              </div>
+            </dl>
+
+            <SidebarSection
+              title={t.planning.certification}
+              summary={`${diverProfile.agency} · ${selectedCertification?.name ?? ''}`}
+            >
+              <DiverProfile
+                profile={diverProfile}
+                effectiveDepthLimit={effectiveDepthLimit}
+                matchingSiteCount={resultCounts.matching}
+                totalSiteCount={totalSiteCount}
+                onChange={setDiverProfile}
+              />
+            </SidebarSection>
+
+            <SidebarSection
+              title={t.planning.divePlanning}
+              summary={`${selectedSiteTypeLabel} · ${selectedDeparture?.properties.name ?? t.planning.noDepartureSelected} · ${maximumDistanceNm} NM`}
+              initiallyOpen
+            >
+              <PlanningPanel
+                departurePoints={departurePoints}
+                siteTypes={siteTypes}
+                selectedDepartureId={selectedDepartureId}
+                selectedSiteType={selectedSiteType}
+                maximumDistanceNm={maximumDistanceNm}
+                maximumSliderDistanceNm={MAXIMUM_DISTANCE_SLIDER_NM}
+                onDepartureChange={setSelectedDepartureId}
+                onSiteTypeChange={setSelectedSiteType}
+                onMaximumDistanceChange={setMaximumDistanceNm}
+              />
+            </SidebarSection>
+
+            <ResultsSummary
               totalSiteCount={totalSiteCount}
-              onChange={setDiverProfile}
+              matchingSiteCount={resultCounts.matching}
+              depthMatchCount={resultCounts.depth}
+              distanceMatchCount={
+                selectedDeparture ? resultCounts.distance : null
+              }
+              selectedDepartureName={
+                selectedDeparture?.properties.name ?? null
+              }
             />
-          </SidebarSection>
 
-          <SidebarSection
-            title={t.planning.divePlanning}
-            summary={
-              selectedDeparture?.properties.name ??
-              t.planning.noDepartureSelected
-            }
-            initiallyOpen
-          >
-            <PlanningPanel
-              departurePoints={departurePoints}
-              siteTypes={siteTypes}
-              selectedDepartureId={selectedDepartureId}
-              selectedSiteType={selectedSiteType}
-              maximumDistanceNm={maximumDistanceNm}
-              maximumSliderDistanceNm={MAXIMUM_DISTANCE_SLIDER_NM}
-              onDepartureChange={setSelectedDepartureId}
-              onSiteTypeChange={setSelectedSiteType}
-              onMaximumDistanceChange={setMaximumDistanceNm}
-            />
-          </SidebarSection>
-
-          <ResultsSummary
-            totalSiteCount={totalSiteCount}
-            matchingSiteCount={resultCounts.matching}
-            depthMatchCount={resultCounts.depth}
-            distanceMatchCount={
-              selectedDeparture ? resultCounts.distance : null
-            }
-            selectedDepartureName={
-              selectedDeparture?.properties.name ?? null
-            }
-          />
-
-          <SidebarSection
-            title={t.planning.mapLayers}
-            summary={`${diveSites?.features.length ?? 0} · ${diveCenters?.features.length ?? 0} · ${departurePoints?.features.length ?? 0}`}
-          >
-            <ProjectSidebar
-              counts={{
-                diveSites: totalSiteCount,
-                diveCenters: diveCenters?.features.length ?? 0,
-                departurePoints: departurePoints?.features.length ?? 0,
-              }}
-              loading={loading}
-              errors={errors}
-              visibility={visibility}
-              onToggleLayer={toggleLayer}
-              onRetry={retry}
-            />
-          </SidebarSection>
+            <SidebarSection
+              title={t.planning.mapLayers}
+              summary={`${diveSites?.features.length ?? 0} · ${diveCenters?.features.length ?? 0} · ${departurePoints?.features.length ?? 0}`}
+            >
+              <ProjectSidebar
+                counts={{
+                  diveSites: totalSiteCount,
+                  diveCenters: diveCenters?.features.length ?? 0,
+                  departurePoints: departurePoints?.features.length ?? 0,
+                }}
+                loading={loading}
+                errors={errors}
+                visibility={visibility}
+                onToggleLayer={toggleLayer}
+                onRetry={retry}
+              />
+            </SidebarSection>
+          </div>
         </aside>
+        {isMobilePanelOpen && (
+          <button
+            className="mobile-sheet-backdrop"
+            type="button"
+            aria-label={t.planning.closeFilters}
+            onClick={() => setIsMobilePanelOpen(false)}
+          />
+        )}
         <section className="map-panel" aria-label={t.app.mapAriaLabel}>
           <DiveMap
             diveSites={diveSites}

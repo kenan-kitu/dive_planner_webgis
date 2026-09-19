@@ -87,6 +87,9 @@ export function PlanningPanel({
 
   const hasSearchResults =
     groupedDepartures.marinas.length + groupedDepartures.boatRamps.length > 0
+  const selectedDepartureName = departurePoints?.features.find(
+    (departure) => departure.properties.record_id === selectedDepartureId,
+  )?.properties.name
 
   return (
     <section className="planning-panel" aria-labelledby="planning-panel-title">
@@ -127,6 +130,7 @@ export function PlanningPanel({
           <span>{t.planning.departurePoint}</span>
           <select
             value={selectedDepartureId ?? ''}
+            title={selectedDepartureName}
             onChange={(event) =>
               onDepartureChange(
                 event.target.value ? Number(event.target.value) : null,
@@ -159,6 +163,12 @@ export function PlanningPanel({
               </optgroup>
             )}
           </select>
+          {selectedDepartureName && (
+            <output className="selected-departure" aria-live="polite">
+              <small>{t.planning.departurePoint}</small>
+              <strong>{selectedDepartureName}</strong>
+            </output>
+          )}
           <small>
             {hasSearchResults
               ? t.planning.namedDeparturesFirst
