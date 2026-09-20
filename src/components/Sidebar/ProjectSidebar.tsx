@@ -1,4 +1,5 @@
 import type { LayerState, MapLayerKey } from '../../App'
+import { mapSymbolSvg, type MapSymbolId } from '../../config/mapStyles'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { Translation } from '../../i18n/translations'
 
@@ -16,6 +17,23 @@ const LAYER_KEYS: MapLayerKey[] = [
   'diveCenters',
   'departurePoints',
 ]
+
+const LAYER_SYMBOLS: Record<MapLayerKey, MapSymbolId> = {
+  diveSites: 'reef',
+  diveCenters: 'diveCenter',
+  departurePoints: 'departure',
+}
+
+function LayerSymbol({ layer }: { layer: MapLayerKey }) {
+  const symbol = LAYER_SYMBOLS[layer]
+  return (
+    <span
+      className={`map-symbol map-symbol--${symbol} map-symbol--legend map-symbol--layer-control`}
+      aria-hidden="true"
+      dangerouslySetInnerHTML={{ __html: mapSymbolSvg(symbol) }}
+    />
+  )
+}
 
 function localizedError(error: string, t: Translation): string {
   if (error === 'INVALID_GEOJSON') return t.status.invalidResponse
@@ -55,10 +73,7 @@ export function ProjectSidebar({
               checked={visibility[layer]}
               onChange={() => onToggleLayer(layer)}
             />
-            <span
-              className={`legend__marker legend__marker--${layer}`}
-              aria-hidden="true"
-            />
+            <LayerSymbol layer={layer} />
             <span>{t.layers[layer]}</span>
           </label>
         ))}
@@ -71,10 +86,7 @@ export function ProjectSidebar({
         </div>
         {LAYER_KEYS.map((layer) => (
           <div className="dataset-row" key={layer}>
-            <span
-              className={`legend__marker legend__marker--${layer}`}
-              aria-hidden="true"
-            />
+            <LayerSymbol layer={layer} />
             <span>{t.layers[layer]}</span>
             <strong>
               {loading[layer]
@@ -89,19 +101,6 @@ export function ProjectSidebar({
                 {localizedError(errors[layer], t)}
               </small>
             )}
-          </div>
-        ))}
-      </section>
-
-      <section className="legend" aria-label={t.sidebar.mapLegend}>
-        <h3>{t.sidebar.mapLegend}</h3>
-        {LAYER_KEYS.map((layer) => (
-          <div className="legend__item" key={layer}>
-            <span
-              className={`legend__marker legend__marker--${layer}`}
-              aria-hidden="true"
-            />
-            <span>{t.layers[layer]}</span>
           </div>
         ))}
       </section>

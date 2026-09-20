@@ -342,6 +342,10 @@ const sitePhotos: Record<string, PhotoReference[]> = {
     photo('https://upload.wikimedia.org/wikipedia/commons/c/c1/Sand_Key_Rock_Key_Eastern_Dry_Rocks_1970_1VCLP00010044.jpg', 'https://commons.wikimedia.org/wiki/File:Sand_Key_Rock_Key_Eastern_Dry_Rocks_1970_1VCLP00010044.jpg', 'Aerial view including Eastern Dry Rocks.', 'James Stuby, based on USGS imagery', 'Public domain'),
     photo('https://upload.wikimedia.org/wikipedia/commons/0/0c/Map_of_Eastern_Dry_Rocks_Sanctuary_Preservation_Area.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_Eastern_Dry_Rocks_Sanctuary_Preservation_Area.jpg', 'Map of Eastern Dry Rocks Sanctuary Preservation Area.', 'NOAA', 'Public domain'),
   ],
+  'Elbow': [
+    photo('https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/City_Of_Washington_%2838741160925%29.jpg/1920px-City_Of_Washington_%2838741160925%29.jpg', 'https://commons.wikimedia.org/wiki/File:City_Of_Washington_(38741160925).jpg', 'The City of Washington wreck at the Elbow reef.', 'National Marine Sanctuaries', 'Public domain'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/f/fa/Map_of_the_Elbow_Sanctuary_Preservation_Area.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_the_Elbow_Sanctuary_Preservation_Area.jpg', 'Map of the Elbow Sanctuary Preservation Area.', 'NOAA', 'Public domain'),
+  ],
   'French Reef': [
     photo('https://upload.wikimedia.org/wikipedia/commons/3/3e/French_Reef%2C_Key_Largo_%2815438400026%29.jpg', 'https://commons.wikimedia.org/wiki/File:French_Reef,_Key_Largo_(15438400026).jpg', 'Coral formations at French Reef.', 'Matt Kieffer', 'CC BY-SA 2.0'),
     photo('https://upload.wikimedia.org/wikipedia/commons/d/dd/Filefish_on_French_Reef%2C_Key_Largo_%2815274917287%29.jpg', 'https://commons.wikimedia.org/wiki/File:Filefish_on_French_Reef,_Key_Largo_(15274917287).jpg', 'Filefish at French Reef.', 'Matt Kieffer', 'CC BY-SA 2.0'),
@@ -360,6 +364,30 @@ const sitePhotos: Record<string, PhotoReference[]> = {
     photo('https://upload.wikimedia.org/wikipedia/commons/b/bd/Grunts_9-ft_2010.jpg', 'https://commons.wikimedia.org/wiki/File:Grunts_9-ft_2010.jpg', 'Grunts at Nine Foot Stake Reef.', 'Jstuby', 'Public domain'),
     photo('https://upload.wikimedia.org/wikipedia/commons/3/34/Chromis_9ft_Stake_2010.jpg', 'https://commons.wikimedia.org/wiki/File:Chromis_9ft_Stake_2010.jpg', 'Chromis at Nine Foot Stake Reef.', 'Jstuby', 'CC0'),
     photo('https://upload.wikimedia.org/wikipedia/commons/e/e0/Brain_coral_9ft_Stake_2010.jpg', 'https://commons.wikimedia.org/wiki/File:Brain_coral_9ft_Stake_2010.jpg', 'Brain coral at Nine Foot Stake Reef.', 'Jstuby', 'CC0'),
+  ],
+  'Newfound Harbor': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/e/ea/Map_of_Newfound_Harbor_Key_Sanctuary_Preservation_Area.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_Newfound_Harbor_Key_Sanctuary_Preservation_Area.jpg', 'Map of Newfound Harbor Key Sanctuary Preservation Area.', 'NOAA', 'Public domain'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/5/53/Newfound_Harbor_SPA_1979_1VEOR00120235.jpg', 'https://commons.wikimedia.org/wiki/File:Newfound_Harbor_SPA_1979_1VEOR00120235.jpg', 'Aerial view of the Newfound Harbor sanctuary area.', 'James Stuby, based on USGS imagery', 'Public domain'),
+  ],
+  'Pickles Reef': [
+    photo('https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/Acropora_palmata_01_Pickles_Reef_20230713.jpg/1920px-Acropora_palmata_01_Pickles_Reef_20230713.jpg', 'https://commons.wikimedia.org/wiki/File:Acropora_palmata_01_Pickles_Reef_20230713.jpg', 'Elkhorn coral at Pickles Reef.', 'Jstuby', 'CC0'),
+    photo('https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Acropora_palmata_02_Pickles_Reef_20230713.jpg/1920px-Acropora_palmata_02_Pickles_Reef_20230713.jpg', 'https://commons.wikimedia.org/wiki/File:Acropora_palmata_02_Pickles_Reef_20230713.jpg', 'Elkhorn coral habitat at Pickles Reef.', 'Jstuby', 'CC0'),
+    photo('https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Acropora_palmata_03_Pickles_Reef_20230713.jpg/1920px-Acropora_palmata_03_Pickles_Reef_20230713.jpg', 'https://commons.wikimedia.org/wiki/File:Acropora_palmata_03_Pickles_Reef_20230713.jpg', 'Elkhorn coral colony at Pickles Reef.', 'Jstuby', 'CC0'),
+  ],
+  'Rock Key': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/a/a5/Map_of_Rock_Key_Sanctuary_Preservation_Area.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_Rock_Key_Sanctuary_Preservation_Area.jpg', 'Map of Rock Key Sanctuary Preservation Area.', 'NOAA', 'Public domain'),
+    photo('https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/Sand_Key_Rock_Key_Eastern_Dry_Rocks_1970_1VCLP00010044.jpg/1920px-Sand_Key_Rock_Key_Eastern_Dry_Rocks_1970_1VCLP00010044.jpg', 'https://commons.wikimedia.org/wiki/File:Sand_Key_Rock_Key_Eastern_Dry_Rocks_1970_1VCLP00010044.jpg', 'Aerial view including Rock Key.', 'James Stuby, based on USGS imagery', 'Public domain'),
+  ],
+  'Snapper Ledge': [
+    photo('https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/Black-ball_sponge_Snapper_Ledge_20080310.jpg/1920px-Black-ball_sponge_Snapper_Ledge_20080310.jpg', 'https://commons.wikimedia.org/wiki/File:Black-ball_sponge_Snapper_Ledge_20080310.jpg', 'Black-ball sponge at Snapper Ledge.', 'Jstuby', 'CC0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/8/81/Brain_coral_Snapper_Ledge_20080310.jpg', 'https://commons.wikimedia.org/wiki/File:Brain_coral_Snapper_Ledge_20080310.jpg', 'Brain coral at Snapper Ledge.', 'Jstuby', 'CC0'),
+    photo('https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Caribean_Barrel_Sponge_Snapper_Ledge_20080310.jpg/1920px-Caribean_Barrel_Sponge_Snapper_Ledge_20080310.jpg', 'https://commons.wikimedia.org/wiki/File:Caribean_Barrel_Sponge_Snapper_Ledge_20080310.jpg', 'Caribbean barrel sponge at Snapper Ledge.', 'Jstuby', 'CC0'),
+  ],
+  'Turtle Rocks': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/4/44/Buoys_at_Turtle_Rocks.jpg', 'https://commons.wikimedia.org/wiki/File:Buoys_at_Turtle_Rocks.jpg', 'Mooring buoys at Turtle Rocks.', 'NOAA', 'Public domain'),
+  ],
+  'Western Sambo': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/1/17/Map_of_Western_Sambo_Ecological_Reserve.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_Western_Sambo_Ecological_Reserve.jpg', 'Map of Western Sambo Ecological Reserve.', 'NOAA', 'Public domain'),
   ],
 }
 
