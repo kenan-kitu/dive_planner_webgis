@@ -4,7 +4,7 @@ export const translations = {
       title: 'Florida Keys Interactive Dive Planner',
       shortTitle: 'Florida Keys Dive Planner',
       kicker: 'Educational WebGIS',
-      phase: 'Phase 8D',
+      phase: 'Phase 8E',
       mapAriaLabel: 'Interactive dive-site map',
     },
     language: {
@@ -268,7 +268,7 @@ export const translations = {
       title: 'Florida Keys Etkileşimli Dalış Planlayıcı',
       shortTitle: 'Florida Keys Dalış Planlayıcı',
       kicker: 'Eğitsel WebGIS',
-      phase: 'Faz 8D',
+      phase: 'Faz 8E',
       mapAriaLabel: 'Etkileşimli dalış noktaları haritası',
     },
     language: {

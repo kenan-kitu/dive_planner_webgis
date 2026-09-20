@@ -18,6 +18,8 @@ export const enrichmentCoverage = {
       (site) => site.matchStatus !== 'unresolved' && site.description !== null,
     ).length,
     withDescription: diveSitesEnrichment.filter((site) => site.description !== null).length,
+    withEnDescription: diveSitesEnrichment.filter((site) => site.descriptionEn !== null).length,
+    withTrDescription: diveSitesEnrichment.filter((site) => site.descriptionTr !== null).length,
     withPhoto: diveSitesEnrichment.filter((site) => site.photos.length >= 1).length,
     withThreePhotos: diveSitesEnrichment.filter((site) => site.photos.length >= 3).length,
     withAuthoritativeSource: diveSitesEnrichment.filter((site) =>
@@ -31,6 +33,8 @@ export const enrichmentCoverage = {
       (center) => center.matchStatus !== 'unresolved' && center.description !== null,
     ).length,
     withDescription: diveCentersEnrichment.filter((center) => center.description !== null).length,
+    withEnDescription: diveCentersEnrichment.filter((center) => center.descriptionEn !== null).length,
+    withTrDescription: diveCentersEnrichment.filter((center) => center.descriptionTr !== null).length,
     withOfficialWebsite: diveCentersEnrichment.filter((center) => center.website !== null).length,
     withPhone: diveCentersEnrichment.filter((center) => center.phone !== null).length,
     withAddress: diveCentersEnrichment.filter((center) => center.address !== null).length,

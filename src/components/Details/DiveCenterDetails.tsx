@@ -4,6 +4,7 @@ import type { DiveCenterFeature, DiveSiteFeature } from '../../types/gis'
 import type { DistanceResult } from '../../utils/spatial'
 import { DetailList, DetailSources, DetailText } from './DetailParts'
 import { PhotoGallery } from './PhotoGallery'
+import { localizeDiveCenterEnrichment } from '../../utils/enrichment'
 
 interface DiveCenterDetailsProps {
   center: DiveCenterFeature
@@ -32,12 +33,13 @@ export function DiveCenterDetails({
   nearbySites,
   onSelectSite,
 }: DiveCenterDetailsProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
+  const localizedEnrichment = localizeDiveCenterEnrichment(enrichment, language)
   const properties = center.properties
-  const name = enrichment?.officialName ?? properties.name
-  const phone = enrichment?.phone ?? properties.phone
-  const address = enrichment?.address ?? properties.address
-  const website = safeWebsite(enrichment?.website ?? properties.website)
+  const name = localizedEnrichment?.officialName ?? properties.name
+  const phone = localizedEnrichment?.phone ?? properties.phone
+  const address = localizedEnrichment?.address ?? properties.address
+  const website = safeWebsite(localizedEnrichment?.website ?? properties.website)
 
   return (
     <article className="rich-detail rich-detail--center" aria-labelledby="center-detail-title">
@@ -47,21 +49,21 @@ export function DiveCenterDetails({
         {name !== properties.name && <small>{properties.name}</small>}
       </header>
 
-      {enrichment && <PhotoGallery photos={enrichment.photos} title={name} />}
-      <DetailText title={t.details.description}>{enrichment?.description}</DetailText>
+      {localizedEnrichment && <PhotoGallery photos={localizedEnrichment.photos} title={name} />}
+      <DetailText title={t.details.description}>{localizedEnrichment?.description}</DetailText>
 
       <dl className="detail-facts detail-facts--contact">
         {address && <div><dt>{t.popup.address}</dt><dd>{address}</dd></div>}
         {phone && <div><dt>{t.popup.phone}</dt><dd><a href={phoneHref(phone)}>{phone}</a></dd></div>}
         {website && <div><dt>{t.popup.website}</dt><dd><a href={website} target="_blank" rel="noreferrer">{t.popup.visitWebsite}</a></dd></div>}
-        {enrichment?.openingHours && <div><dt>{t.details.openingHours}</dt><dd>{enrichment.openingHours}</dd></div>}
+        {localizedEnrichment?.openingHours && <div><dt>{t.details.openingHours}</dt><dd>{localizedEnrichment.openingHours}</dd></div>}
       </dl>
 
-      <DetailList title={t.details.agencies} items={enrichment?.agencies ?? []} />
-      <DetailList title={t.details.services} items={enrichment?.services ?? []} />
-      <DetailList title={t.details.courses} items={enrichment?.courses ?? []} />
-      <DetailList title={t.details.rentals} items={enrichment?.rentals ?? []} />
-      <DetailList title={t.details.boatTrips} items={enrichment?.boatTrips ?? []} />
+      <DetailList title={t.details.agencies} items={localizedEnrichment?.agencies ?? []} />
+      <DetailList title={t.details.services} items={localizedEnrichment?.services ?? []} />
+      <DetailList title={t.details.courses} items={localizedEnrichment?.courses ?? []} />
+      <DetailList title={t.details.rentals} items={localizedEnrichment?.rentals ?? []} />
+      <DetailList title={t.details.boatTrips} items={localizedEnrichment?.boatTrips ?? []} />
       <section className="detail-section nearby-sites">
         <h3>{t.catalog.nearbyDiveSites}</h3>
         <p>{t.catalog.proximityOnly}</p>
@@ -83,7 +85,7 @@ export function DiveCenterDetails({
           <p>{t.catalog.noDiveSites}</p>
         )}
       </section>
-      {enrichment && <DetailSources sources={enrichment.sources} />}
+      {localizedEnrichment && <DetailSources sources={localizedEnrichment.sources} />}
     </article>
   )
 }

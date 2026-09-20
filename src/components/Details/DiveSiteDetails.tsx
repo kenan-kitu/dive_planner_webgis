@@ -3,6 +3,7 @@ import { useLanguage } from '../../i18n/LanguageContext'
 import type { DeparturePointFeature, DiveCenterFeature, DiveSiteFeature } from '../../types/gis'
 import type { DistanceResult } from '../../utils/spatial'
 import { calculateTravelTimeMinutes } from '../../utils/spatial'
+import { localizeDiveSiteEnrichment } from '../../utils/enrichment'
 import { NearbyDiveCenters } from '../Planning/NearbyDiveCenters'
 import { DetailList, DetailSources, DetailText } from './DetailParts'
 import { PhotoGallery } from './PhotoGallery'
@@ -33,6 +34,16 @@ function depthRange(site: DiveSiteFeature, enrichment: DiveSiteEnrichment | null
   return `${minimum}–${maximum} m`
 }
 
+function departureTypeLabel(
+  value: string | null | undefined,
+  dataValues: { marina: string; boatRamp: string; departurePoint: string },
+): string {
+  const normalized = value?.toLowerCase().replace(/[_-]/g, ' ')
+  if (normalized === 'marina') return dataValues.marina
+  if (normalized === 'boat ramp' || normalized === 'ramp') return dataValues.boatRamp
+  return dataValues.departurePoint
+}
+
 export function DiveSiteDetails({
   site,
   enrichment,
@@ -45,12 +56,13 @@ export function DiveSiteDetails({
   effectiveDepthLimit,
   onSelectCenter,
 }: DiveSiteDetailsProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
+  const localizedEnrichment = localizeDiveSiteEnrichment(enrichment, language)
   const properties = site.properties
-  const type = enrichment?.diveType ?? properties.site_type
-  const depth = depthRange(site, enrichment)
+  const type = localizedEnrichment?.diveType ?? properties.site_type
+  const depth = depthRange(site, localizedEnrichment)
   const hasTrip = selectedDeparture && directDistanceNm != null
-  const siteMaximumDepth = enrichment?.knownDepth?.maximumMeters ?? properties.max_depth_m
+  const siteMaximumDepth = localizedEnrichment?.knownDepth?.maximumMeters ?? properties.max_depth_m
   const matchesCertification =
     effectiveDepthLimit == null ||
     (siteMaximumDepth != null && siteMaximumDepth <= effectiveDepthLimit)
@@ -59,33 +71,33 @@ export function DiveSiteDetails({
     <article className="rich-detail rich-detail--site" aria-labelledby="site-detail-title">
       <header className="rich-detail__header">
         <p className="eyebrow">{t.details.diveSiteDetails}</p>
-        <h2 id="site-detail-title">{enrichment?.canonicalName ?? properties.site_name}</h2>
-        {enrichment?.canonicalName && enrichment.canonicalName !== properties.site_name && (
+        <h2 id="site-detail-title">{localizedEnrichment?.canonicalName ?? properties.site_name}</h2>
+        {localizedEnrichment?.canonicalName && localizedEnrichment.canonicalName !== properties.site_name && (
           <small>{properties.site_name}</small>
         )}
       </header>
 
-      {enrichment && <PhotoGallery photos={enrichment.photos} title={properties.site_name} />}
+      {localizedEnrichment && <PhotoGallery photos={localizedEnrichment.photos} title={localizedEnrichment.canonicalName ?? properties.site_name} />}
 
       <dl className="detail-facts">
         {type && <div><dt>{t.details.diveType}</dt><dd>{t.dataValues[type as keyof typeof t.dataValues] ?? type}</dd></div>}
         {depth && <div><dt>{t.details.depth}</dt><dd>{depth}</dd></div>}
-        {(properties.data_quality || enrichment) && (
+        {(properties.data_quality || localizedEnrichment) && (
           <div>
             <dt>{t.details.dataStatus}</dt>
-            <dd>{enrichment ? t.details.matchStatus[enrichment.matchStatus] : properties.data_quality}</dd>
+            <dd>{localizedEnrichment ? t.details.matchStatus[localizedEnrichment.matchStatus] : properties.data_quality}</dd>
           </div>
         )}
       </dl>
 
-      <DetailText title={t.details.summary}>{enrichment?.summary}</DetailText>
-      <DetailText title={t.details.description}>{enrichment?.description ?? properties.description}</DetailText>
-      <DetailList title={t.details.highlights} items={enrichment?.highlights ?? []} />
-      <DetailList title={t.details.marineLife} items={enrichment?.marineLife ?? []} />
-      <DetailText title={t.details.visibility}>{enrichment?.visibility}</DetailText>
-      <DetailText title={t.details.currents}>{enrichment?.currentNotes}</DetailText>
-      <DetailText title={t.details.experience}>{enrichment?.experienceNotes}</DetailText>
-      <DetailText title={t.details.history}>{enrichment?.history}</DetailText>
+      <DetailText title={t.details.summary}>{localizedEnrichment?.summary}</DetailText>
+      <DetailText title={t.details.description}>{localizedEnrichment?.description ?? (language === 'en' ? properties.description : null)}</DetailText>
+      <DetailList title={t.details.highlights} items={localizedEnrichment?.highlights ?? []} />
+      <DetailList title={t.details.marineLife} items={localizedEnrichment?.marineLife ?? []} />
+      <DetailText title={t.details.visibility}>{localizedEnrichment?.visibility}</DetailText>
+      <DetailText title={t.details.currents}>{localizedEnrichment?.currentNotes}</DetailText>
+      <DetailText title={t.details.experience}>{localizedEnrichment?.experienceNotes}</DetailText>
+      <DetailText title={t.details.history}>{localizedEnrichment?.history}</DetailText>
 
       {certificationLabel && effectiveDepthLimit != null ? (
         <section className="detail-section detail-suitability">
@@ -140,7 +152,7 @@ export function DiveSiteDetails({
               <li key={feature.properties.record_id}>
                 <div>
                   <strong>{feature.properties.name}</strong>
-                  <span>{feature.properties.type ?? t.dataValues.departurePoint}</span>
+                  <span>{departureTypeLabel(feature.properties.type, t.dataValues)}</span>
                 </div>
                 <dl>
                   <div>
@@ -163,7 +175,7 @@ export function DiveSiteDetails({
         )}
         <small>{t.catalog.departureDisclaimer}</small>
       </section>
-      {enrichment && <DetailSources sources={enrichment.sources} />}
+      {localizedEnrichment && <DetailSources sources={localizedEnrichment.sources} />}
     </article>
   )
 }

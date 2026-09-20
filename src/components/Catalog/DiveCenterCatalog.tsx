@@ -1,6 +1,11 @@
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { DiveCenterFeature } from '../../types/gis'
-import { getDiveCenterEnrichment } from '../../utils/enrichment'
+import {
+  getDiveCenterEnrichment,
+  localizedPhotoCaption,
+  localizeDiveCenterEnrichment,
+} from '../../utils/enrichment'
+import { CatalogMedia } from './CatalogMedia'
 
 export interface CenterCatalogItem {
   center: DiveCenterFeature
@@ -24,7 +29,7 @@ export function DiveCenterCatalog({
   onSearchChange,
   onSelect,
 }: DiveCenterCatalogProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
 
   return (
     <section className="catalog" aria-labelledby="dive-center-catalog-title">
@@ -58,8 +63,9 @@ export function DiveCenterCatalog({
       ) : (
         <div className="catalog-grid catalog-grid--centers">
           {items.map(({ center, distanceNm }) => {
-            const enrichment = getDiveCenterEnrichment(
-              center.properties.record_id,
+            const enrichment = localizeDiveCenterEnrichment(
+              getDiveCenterEnrichment(center.properties.record_id),
+              language,
             )
             const photo = enrichment?.photos[0]
             const isSelected = selectedCenter === center
@@ -70,13 +76,11 @@ export function DiveCenterCatalog({
                 className={`catalog-card catalog-card--center${isSelected ? ' is-selected' : ''}`}
                 key={center.properties.record_id}
               >
-                <div className="catalog-card__media">
-                  {photo ? (
-                    <img src={photo.url} alt={photo.caption} loading="lazy" />
-                  ) : (
-                    <span aria-hidden="true">+</span>
-                  )}
-                </div>
+                <CatalogMedia
+                  src={photo?.url}
+                  alt={photo ? localizedPhotoCaption(photo, language, enrichment?.officialName ?? center.properties.name) : ''}
+                  fallback="+"
+                />
                 <div className="catalog-card__body">
                   <div>
                     <small>{t.dataValues.diveCenter}</small>

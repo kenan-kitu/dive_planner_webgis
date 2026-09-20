@@ -19,6 +19,8 @@ export interface PhotoReference {
   sourcePage: string
   sourceName: string
   caption: string
+  captionEn?: string
+  captionTr?: string
   attribution: string | null
   license: string | null
 }
@@ -34,16 +36,32 @@ export interface DiveSiteEnrichment {
   canonicalName: string | null
   aliases: string[]
   summary: string | null
+  summaryEn?: string | null
+  summaryTr?: string | null
   description: string | null
+  descriptionEn?: string | null
+  descriptionTr?: string | null
   diveType: 'reef' | 'wall' | 'wreck' | null
   knownDepth: KnownDepth | null
   characteristics: string[]
   highlights: string[]
+  highlightsEn?: string[]
+  highlightsTr?: string[]
   marineLife: string[]
+  marineLifeEn?: string[]
+  marineLifeTr?: string[]
   visibility: string | null
+  visibilityEn?: string | null
+  visibilityTr?: string | null
   currentNotes: string | null
+  currentNotesEn?: string | null
+  currentNotesTr?: string | null
   experienceNotes: string | null
+  experienceNotesEn?: string | null
+  experienceNotesTr?: string | null
   history: string | null
+  historyEn?: string | null
+  historyTr?: string | null
   photos: PhotoReference[]
   sources: EnrichmentSource[]
   matchStatus: EnrichmentMatchStatus
@@ -56,15 +74,27 @@ export interface DiveCenterEnrichment {
   name: string
   officialName: string | null
   description: string | null
+  descriptionEn?: string | null
+  descriptionTr?: string | null
   phone: string | null
   website: string | null
   address: string | null
   openingHours: string | null
+  openingHoursEn?: string | null
+  openingHoursTr?: string | null
   agencies: string[]
   services: string[]
+  servicesEn?: string[]
+  servicesTr?: string[]
   courses: string[]
+  coursesEn?: string[]
+  coursesTr?: string[]
   boatTrips: string[]
+  boatTripsEn?: string[]
+  boatTripsTr?: string[]
   rentals: string[]
+  rentalsEn?: string[]
+  rentalsTr?: string[]
   servedDiveSites: string[]
   socialUrls: string[]
   photos: PhotoReference[]

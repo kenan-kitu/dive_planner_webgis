@@ -3,6 +3,7 @@ import type {
   EnrichmentSource,
   PhotoReference,
 } from './types.ts'
+import { localizedCenterFields } from './localizedContent.ts'
 
 const source = (
   title: string,
@@ -72,14 +73,16 @@ const records: DiveCenterEnrichment[] = [
   {
     ...base(3, 'Scuba Quest Outlet'),
     officialName: 'Scuba Quest',
-    description: 'Florida dive retailer with equipment sales, service, rentals, and diver education information.',
-    website: 'https://www.scubaquest.com/location',
+    description: 'Key Largo dive retailer with equipment sales, service, rentals, and diver education.',
+    phone: '+1 305-451-1408',
+    website: 'https://www.scubaquest.com/key-largo',
+    address: '106600 Overseas Highway, Key Largo, FL 33037',
     services: ['Dive equipment sales', 'Equipment service'],
     courses: ['Scuba training'],
     rentals: ['Scuba equipment rental'],
-    sources: [source('Scuba Quest locations', 'https://www.scubaquest.com/location')],
-    matchStatus: 'partial',
-    researchNotes: 'The official location page was found, but the exact legacy Key Largo outlet record could not be matched confidently to a current location.',
+    sources: [source('Scuba Quest Key Largo official page', 'https://www.scubaquest.com/key-largo')],
+    matchStatus: 'verified',
+    researchNotes: 'The official page identifies the Key Largo location as the Outlet described by the GIS record.',
   },
   {
     ...base(4, 'Dive In Watersports'),
@@ -301,4 +304,7 @@ const records: DiveCenterEnrichment[] = [
   },
 ]
 
-export const diveCentersEnrichment: DiveCenterEnrichment[] = records
+export const diveCentersEnrichment: DiveCenterEnrichment[] = records.map((record) => ({
+  ...record,
+  ...localizedCenterFields(record),
+}))

@@ -32,6 +32,8 @@ for (const site of diveSitesEnrichment) {
   if (site.inferredFields.length > 0) {
     assert.notEqual(site.matchStatus, 'verified', `${site.siteName} has inferred fields but is verified`)
   }
+  if (site.descriptionEn) assert.ok(site.summaryEn, `${site.siteName} English summary is required`)
+  if (site.descriptionTr) assert.ok(site.summaryTr, `${site.siteName} Turkish summary is required`)
 }
 
 for (const center of diveCentersEnrichment) {
@@ -48,6 +50,7 @@ for (const center of diveCentersEnrichment) {
   if (center.inferredFields.length > 0) {
     assert.notEqual(center.matchStatus, 'verified', `${center.name} has inferred fields but is verified`)
   }
+  if (center.descriptionEn) assert.ok(center.descriptionTr, `${center.name} Turkish description is required`)
 }
 
 assert.equal(enrichmentCoverage.diveSites.total, 63)

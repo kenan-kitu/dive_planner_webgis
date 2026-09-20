@@ -1,8 +1,13 @@
 import type { DiveSiteEnrichment } from '../../data/enrichment/types'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { DiveSiteAnalysis, DiveSiteFeature } from '../../types/gis'
-import { getDiveSiteEnrichment } from '../../utils/enrichment'
+import {
+  getDiveSiteEnrichment,
+  localizedPhotoCaption,
+  localizeDiveSiteEnrichment,
+} from '../../utils/enrichment'
 import { calculateTravelTimeMinutes } from '../../utils/spatial'
+import { CatalogMedia } from './CatalogMedia'
 
 interface DiveSiteCatalogProps {
   sites: readonly DiveSiteFeature[]
@@ -45,7 +50,7 @@ export function DiveSiteCatalog({
   onTypeFilterChange,
   onSelect,
 }: DiveSiteCatalogProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const showFilters = onSearchChange && onTypeFilterChange
 
   return (
@@ -95,7 +100,10 @@ export function DiveSiteCatalog({
       ) : (
         <div className="catalog-grid">
           {sites.map((site) => {
-            const enrichment = getDiveSiteEnrichment(site.properties.site_name)
+            const enrichment = localizeDiveSiteEnrichment(
+              getDiveSiteEnrichment(site.properties.site_name),
+              language,
+            )
             const photo = enrichment?.photos[0]
             const result = analysis.get(site)
             const isSelected = selectedSite === site
@@ -106,13 +114,11 @@ export function DiveSiteCatalog({
                 className={`catalog-card${isSelected ? ' is-selected' : ''}`}
                 key={site.properties.site_name}
               >
-                <div className="catalog-card__media">
-                  {photo ? (
-                    <img src={photo.url} alt={photo.caption} loading="lazy" />
-                  ) : (
-                    <span aria-hidden="true">◎</span>
-                  )}
-                </div>
+                <CatalogMedia
+                  src={photo?.url}
+                  alt={photo ? localizedPhotoCaption(photo, language, enrichment?.canonicalName ?? site.properties.site_name) : ''}
+                  fallback="◎"
+                />
                 <div className="catalog-card__body">
                   <div>
                     <small>
