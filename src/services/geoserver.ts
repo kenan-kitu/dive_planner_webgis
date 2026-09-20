@@ -9,7 +9,8 @@ import type {
   DiveSiteProperties,
 } from '../types/gis'
 
-const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 12_000] as const
+const REQUEST_TIMEOUT_MS = 45_000
+const RETRY_DELAYS_MS = [5_000, 10_000, 20_000, 30_000, 45_000] as const
 
 class GeoServerRequestError extends Error {
   constructor(
@@ -48,6 +49,33 @@ function isRetryableError(error: unknown): boolean {
   )
 }
 
+async function fetchWithTimeout(
+  url: string,
+  signal?: AbortSignal,
+): Promise<Response> {
+  const attemptController = new AbortController()
+  const handleAbort = () => attemptController.abort(signal?.reason)
+  const timeoutId = window.setTimeout(
+    () => attemptController.abort(),
+    REQUEST_TIMEOUT_MS,
+  )
+
+  signal?.addEventListener('abort', handleAbort, { once: true })
+
+  try {
+    return await fetch(url, { signal: attemptController.signal })
+  } catch (error) {
+    if (attemptController.signal.aborted && !signal?.aborted) {
+      throw new GeoServerRequestError('REQUEST_TIMEOUT', true)
+    }
+
+    throw error
+  } finally {
+    window.clearTimeout(timeoutId)
+    signal?.removeEventListener('abort', handleAbort)
+  }
+}
+
 async function fetchPointLayer<Properties>(
   layerName: string,
   signal?: AbortSignal,
@@ -56,7 +84,7 @@ async function fetchPointLayer<Properties>(
 
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
     try {
-      const response = await fetch(url, { signal })
+      const response = await fetchWithTimeout(url, signal)
 
       if (!response.ok) {
         throw new GeoServerRequestError(
