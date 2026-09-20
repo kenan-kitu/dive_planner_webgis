@@ -1,11 +1,13 @@
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { DiveCenterFeature } from '../../types/gis'
 import type { DistanceResult } from '../../utils/spatial'
+import { getDiveCenterEnrichment } from '../../utils/enrichment'
 
 interface NearbyDiveCentersProps {
   selectedDiveSiteName: string
   centers: readonly DistanceResult<DiveCenterFeature>[]
   compact?: boolean
+  onSelectCenter?: (center: DiveCenterFeature) => void
 }
 
 function safeWebsiteUrl(value: string | null): string | null {
@@ -29,6 +31,7 @@ export function NearbyDiveCenters({
   selectedDiveSiteName,
   centers,
   compact = false,
+  onSelectCenter,
 }: NearbyDiveCentersProps) {
   const { t } = useLanguage()
 
@@ -50,13 +53,24 @@ export function NearbyDiveCenters({
         <ol className="nearby-centers__list">
           {centers.map(({ feature, distanceNm }) => {
             const { properties } = feature
-            const website = safeWebsiteUrl(properties.website)
+            const enrichment = getDiveCenterEnrichment(properties.record_id)
+            const website = safeWebsiteUrl(enrichment?.website ?? properties.website)
+            const phone = enrichment?.phone ?? properties.phone
+            const photo = enrichment?.photos[0]
 
             return (
               <li key={properties.record_id}>
                 <article className="nearby-center-card">
+                  {photo ? (
+                    <img
+                      className="nearby-center-card__image"
+                      src={photo.url}
+                      alt={photo.caption}
+                      loading="lazy"
+                    />
+                  ) : null}
                   <header>
-                    <strong>{properties.name}</strong>
+                    <strong>{enrichment?.officialName ?? properties.name}</strong>
                     <span
                       className="nearby-center-card__distance"
                       aria-label={`${t.planning.distance}: ${distanceNm.toFixed(1)} NM`}
@@ -64,27 +78,45 @@ export function NearbyDiveCenters({
                       {distanceNm.toFixed(1)} NM
                     </span>
                   </header>
-                  {(properties.phone || properties.address) && (
+                  {(phone || properties.address) ? (
                     <dl>
-                      {properties.phone && (
+                      {phone ? (
                         <div>
                           <dt>{t.popup.phone}</dt>
                           <dd>
-                            <a href={phoneUrl(properties.phone)}>
-                              {properties.phone}
+                            <a href={phoneUrl(phone)}>
+                              {phone}
                             </a>
                           </dd>
                         </div>
-                      )}
-                      {properties.address && (
+                      ) : null}
+                      {properties.address ? (
                         <div>
                           <dt>{t.popup.address}</dt>
                           <dd>{properties.address}</dd>
                         </div>
-                      )}
+                      ) : null}
                     </dl>
+                  ) : null}
+                  {enrichment?.services.length ? (
+                    <p className="nearby-center-card__services">
+                      {enrichment.services.slice(0, 3).join(' · ')}
+                    </p>
+                  ) : null}
+                  {enrichment?.servedDiveSites.some(
+                    (siteName) =>
+                      siteName.toLocaleLowerCase() ===
+                      selectedDiveSiteName.toLocaleLowerCase(),
+                  ) ? (
+                    <span className="nearby-center-card__verified">
+                      {t.catalog.sourcedTripOperator}
+                    </span>
+                  ) : (
+                    <span className="nearby-center-card__proximity">
+                      {t.catalog.nearbyByDistance}
+                    </span>
                   )}
-                  {website && (
+                  {website ? (
                     <a
                       className="nearby-center-card__website"
                       href={website}
@@ -93,7 +125,12 @@ export function NearbyDiveCenters({
                     >
                       {t.popup.website}
                     </a>
-                  )}
+                  ) : null}
+                  {onSelectCenter ? (
+                    <button type="button" onClick={() => onSelectCenter(feature)}>
+                      {t.catalog.viewCenter}
+                    </button>
+                  ) : null}
                 </article>
               </li>
             )
