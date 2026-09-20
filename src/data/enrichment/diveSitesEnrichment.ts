@@ -3,6 +3,7 @@ import type {
   EnrichmentSource,
   PhotoReference,
 } from './types.ts'
+import { localizedSiteFields } from './localizedContent.ts'
 
 const source = (
   title: string,
@@ -66,6 +67,11 @@ const CAPTAIN_HOOKS_KEYS = source(
   'Florida Keys snorkeling and dive-site overview',
   'https://captainhooks.com/readers-choice-awards-gives-florida-keys-best-snorkeling-ranking-in-all-of-the-us-and-canada/',
   'official-business',
+)
+const FWC_ARTIFICIAL_REEFS = source(
+  'Florida Keys Artificial Reefs',
+  'https://gis.myfwc.com/boating_guides/Florida_Keys/pages/art_reefs.html',
+  'government',
 )
 
 const siteNames = [
@@ -162,6 +168,7 @@ const spaSites = new Set<string>([
   'Davis Ledge',
   'Eastern Dry Rocks',
   'Elbow',
+  'Grecian Rocks',
   'Hen and Chickens',
   'Key Largo Dry Rocks',
   'Looe Key',
@@ -183,6 +190,7 @@ const mooringSites = new Set<string>([
   'Carysfort Trench',
   'Cayman Salvor Wreck',
   'Cottrell Key',
+  'Conch Reef Wall',
   'Crocker Reef',
   'Duane Wreck (Shipwreck Trail)',
   'Eagle Wreck (Shipwreck Trail)',
@@ -309,6 +317,50 @@ const sitePhotos: Record<string, PhotoReference[]> = {
   'Vandenberg Wreck': [
     photo('https://upload.wikimedia.org/wikipedia/commons/1/14/Diver_at_USNS_General_Hoyt_S._Vandenberg_%28T-AGM-10%29_wreck_off_Key_West_in_January_2015.JPG', 'https://commons.wikimedia.org/wiki/File:Diver_at_USNS_General_Hoyt_S._Vandenberg_(T-AGM-10)_wreck_off_Key_West_in_January_2015.JPG', 'Diver at the USNS General Hoyt S. Vandenberg wreck.', 'Mass Communication Specialist 2nd Class Nicholas S. Tenorio / U.S. Navy', 'Public domain'),
   ],
+  'Cheeca Rocks': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/8/8a/Map_of_Cheeca_Rocks_Sanctuary_Preservation_Area.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_Cheeca_Rocks_Sanctuary_Preservation_Area.jpg', 'Map of Cheeca Rocks Sanctuary Preservation Area.', 'NOAA', 'Public domain'),
+  ],
+  'Coffins Patch': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/e/e3/Map_of_Coffins_Patch_Sanctuary_Preservation_Area.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_Coffins_Patch_Sanctuary_Preservation_Area.jpg', 'Map of Coffins Patch Sanctuary Preservation Area.', 'NOAA', 'Public domain'),
+  ],
+  'Conch Reef': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/e/ef/Corals_Conch_Reef_20230713.jpg', 'https://commons.wikimedia.org/wiki/File:Corals_Conch_Reef_20230713.jpg', 'Corals at Conch Reef.', 'Jstuby', 'CC0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/e/ee/Corals_2_Conch_Reef_20230713.jpg', 'https://commons.wikimedia.org/wiki/File:Corals_2_Conch_Reef_20230713.jpg', 'Coral habitat at Conch Reef.', 'Jstuby', 'CC0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/9/9d/Diver_capturing_Aquarius_Reef_Base.jpg', 'https://commons.wikimedia.org/wiki/File:Diver_capturing_Aquarius_Reef_Base.jpg', 'Diver photographing Aquarius Reef Base at Conch Reef.', 'NOAA / Maya Walton', 'Public domain'),
+  ],
+  'Crocker Reef': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/c/c5/Buoys_at_Crocker_Reef.jpg', 'https://commons.wikimedia.org/wiki/File:Buoys_at_Crocker_Reef.jpg', 'Mooring buoys at Crocker Reef.', 'NOAA', 'Public domain'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/d/d6/Catlin_Seaview_tripod_system_at_Crocker_reef_1.jpg', 'https://commons.wikimedia.org/wiki/File:Catlin_Seaview_tripod_system_at_Crocker_reef_1.jpg', 'Reef survey equipment at Crocker Reef.', 'NOAA / Maya Walton', 'Public domain'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/3/37/Catlin_Seaview_tripod_system_at_Crocker_reef_2.jpg', 'https://commons.wikimedia.org/wiki/File:Catlin_Seaview_tripod_system_at_Crocker_reef_2.jpg', 'Diver using survey equipment at Crocker Reef.', 'NOAA / Maya Walton', 'Public domain'),
+  ],
+  'Davis Ledge': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/0/0b/Coral_Davis_Reef_20230712.jpg', 'https://commons.wikimedia.org/wiki/File:Coral_Davis_Reef_20230712.jpg', 'Coral at Davis Reef.', 'Jstuby', 'CC0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/8/8d/Budha_statue_Davis_Reef_20230712.jpg', 'https://commons.wikimedia.org/wiki/File:Budha_statue_Davis_Reef_20230712.jpg', 'Underwater Buddha statue at Davis Reef.', 'Jstuby', 'CC0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/2/24/Blue_Tang_Davis_Reef_20230712.jpg', 'https://commons.wikimedia.org/wiki/File:Blue_Tang_Davis_Reef_20230712.jpg', 'Blue tang at Davis Reef.', 'Jstuby', 'CC0'),
+  ],
+  'Eastern Dry Rocks': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/c/c1/Sand_Key_Rock_Key_Eastern_Dry_Rocks_1970_1VCLP00010044.jpg', 'https://commons.wikimedia.org/wiki/File:Sand_Key_Rock_Key_Eastern_Dry_Rocks_1970_1VCLP00010044.jpg', 'Aerial view including Eastern Dry Rocks.', 'James Stuby, based on USGS imagery', 'Public domain'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/0/0c/Map_of_Eastern_Dry_Rocks_Sanctuary_Preservation_Area.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_Eastern_Dry_Rocks_Sanctuary_Preservation_Area.jpg', 'Map of Eastern Dry Rocks Sanctuary Preservation Area.', 'NOAA', 'Public domain'),
+  ],
+  'French Reef': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/3/3e/French_Reef%2C_Key_Largo_%2815438400026%29.jpg', 'https://commons.wikimedia.org/wiki/File:French_Reef,_Key_Largo_(15438400026).jpg', 'Coral formations at French Reef.', 'Matt Kieffer', 'CC BY-SA 2.0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/d/dd/Filefish_on_French_Reef%2C_Key_Largo_%2815274917287%29.jpg', 'https://commons.wikimedia.org/wiki/File:Filefish_on_French_Reef,_Key_Largo_(15274917287).jpg', 'Filefish at French Reef.', 'Matt Kieffer', 'CC BY-SA 2.0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/5/53/Glassy_Sweeper_Fish_inside_cave_on_French_Reef%2C_Key_Largo_%2815461169962%29.jpg', 'https://commons.wikimedia.org/wiki/File:Glassy_Sweeper_Fish_inside_cave_on_French_Reef,_Key_Largo_(15461169962).jpg', 'Glassy sweepers in an open formation at French Reef.', 'Matt Kieffer', 'CC BY-SA 2.0'),
+  ],
+  'Grecian Rocks': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/d/d2/Map_of_Grecian_Rocks_Sanctuary_Preservation_Area.jpg', 'https://commons.wikimedia.org/wiki/File:Map_of_Grecian_Rocks_Sanctuary_Preservation_Area.jpg', 'Map of Grecian Rocks Sanctuary Preservation Area.', 'NOAA', 'Public domain'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/1/13/SVII_camera_system_at_Grecian_Rocks.jpg', 'https://commons.wikimedia.org/wiki/File:SVII_camera_system_at_Grecian_Rocks.jpg', 'NOAA imaging work at Grecian Rocks.', 'NOAA / Maya Walton', 'Public domain'),
+  ],
+  'Hen and Chickens': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/7/77/Hen_Chicken_reef_1999.jpg', 'https://commons.wikimedia.org/wiki/File:Hen_Chicken_reef_1999.jpg', 'Coral habitat at Hen and Chickens Reef.', 'Jstuby', 'Public domain'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/e/e5/Gray_Angelfish_Hen_and_Chickens_Reef_1999.jpg', 'https://commons.wikimedia.org/wiki/File:Gray_Angelfish_Hen_and_Chickens_Reef_1999.jpg', 'Gray angelfish at Hen and Chickens Reef.', 'Jstuby', 'CC0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/0/0c/Knobby_Star_Coral_Hen_and_Chickens_Reef_1999.jpg', 'https://commons.wikimedia.org/wiki/File:Knobby_Star_Coral_Hen_and_Chickens_Reef_1999.jpg', 'Knobby star coral at Hen and Chickens Reef.', 'Jstuby', 'CC0'),
+  ],
+  'Nine Foot Stake': [
+    photo('https://upload.wikimedia.org/wikipedia/commons/b/bd/Grunts_9-ft_2010.jpg', 'https://commons.wikimedia.org/wiki/File:Grunts_9-ft_2010.jpg', 'Grunts at Nine Foot Stake Reef.', 'Jstuby', 'Public domain'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/3/34/Chromis_9ft_Stake_2010.jpg', 'https://commons.wikimedia.org/wiki/File:Chromis_9ft_Stake_2010.jpg', 'Chromis at Nine Foot Stake Reef.', 'Jstuby', 'CC0'),
+    photo('https://upload.wikimedia.org/wikipedia/commons/e/e0/Brain_coral_9ft_Stake_2010.jpg', 'https://commons.wikimedia.org/wiki/File:Brain_coral_9ft_Stake_2010.jpg', 'Brain coral at Nine Foot Stake Reef.', 'Jstuby', 'CC0'),
+  ],
 }
 
 const overrides: Record<string, Partial<DiveSiteEnrichment>> = {
@@ -381,6 +433,36 @@ const overrides: Record<string, Partial<DiveSiteEnrichment>> = {
   'Western Sambo': {
     canonicalName: 'Western Sambo', summary: 'A protected Key West reef with classic spur-and-groove formations.', description: 'Official operator information describes reef depths from very shallow water to about 30 feet and abundant coral and marine life.', knownDepth: { minimumMeters: 0.9, maximumMeters: 9.1, sourceText: 'Captain Hook’s: 3–30 feet' }, characteristics: ['Spur-and-groove coral reef', 'Ecological reserve / protected area'], marineLife: ['Sharks', 'Sea turtles', 'Stingrays', 'Reef fish'], sources: [NOAA_MOORINGS, CAPTAIN_HOOKS_MARATHON], matchStatus: 'verified',
   },
+  'Conch Reef Wall': {
+    canonicalName: 'Conch Reef Wall',
+    summary: 'The deeper edge of Conch Reef, which NOAA describes as one of the best-developed reef-wall systems in the Florida Keys.',
+    description: 'NOAA sources describe Conch Reef as a tiered reef with a well-developed wall; the named wall site is also listed in the sanctuary mooring-buoy system.',
+    characteristics: ['Reef wall', 'Deeper reef edge'],
+    sources: [NOAA_MOORINGS, NOAA_SPAS],
+    matchStatus: 'verified',
+  },
+  "Joe's Tug Wreck": {
+    canonicalName: "Joe's Tug",
+    summary: 'A 90-foot steel tug used as an artificial reef off Key West.',
+    description: 'The Florida Fish and Wildlife Conservation Commission lists Joe’s Tug as a steel artificial reef in about 65 feet of water.',
+    knownDepth: { minimumMeters: null, maximumMeters: 19.8, sourceText: 'FWC: 65 feet' },
+    characteristics: ['Steel tug wreck', 'Artificial reef'],
+    sources: [FWC_ARTIFICIAL_REEFS],
+    matchStatus: 'verified',
+  },
+  'Toppinos Marker': {
+    canonicalName: "Toppino's Reef",
+    aliases: ['Marker Reef #1', 'Red 32'],
+    summary: 'A shallow Key West reef also known as Toppino’s Reef or Marker Reef #1.',
+    description: 'The official operator guide describes coral fingers, spur-and-groove formations and three mooring buoys in water no deeper than about 25 feet.',
+    knownDepth: { minimumMeters: null, maximumMeters: 7.6, sourceText: 'Key West Dive Center: maximum 25 feet' },
+    characteristics: ['Shallow reef', 'Coral fingers', 'Spur-and-groove formations'],
+    highlights: ['Tall coral fingers', 'Three mooring buoys'],
+    marineLife: ['Grunts', 'Yellowtail snapper', 'Butterflyfish', 'Parrotfish', 'Tangs'],
+    experienceNotes: 'Suitable for shallow diving and snorkeling; the operator also identifies it as a night-diving site.',
+    sources: [source("Toppino's Reef", 'https://www.keywestdivecenter.com/toppinos-reef/', 'official-business')],
+    matchStatus: 'verified',
+  },
 }
 
 function genericSources(siteName: string): EnrichmentSource[] {
@@ -404,7 +486,7 @@ export const diveSitesEnrichment: DiveSiteEnrichment[] = siteNames.map(
     const recordOverride = overrides[siteName] ?? {}
     const sources = recordOverride.sources ?? genericSources(siteName)
 
-    return {
+    const record: DiveSiteEnrichment = {
       siteName,
       canonicalName: recordOverride.canonicalName ?? siteName,
       aliases: recordOverride.aliases ?? [],
@@ -440,11 +522,12 @@ export const diveSitesEnrichment: DiveSiteEnrichment[] = siteNames.map(
           ? 'No sufficiently specific, reliable public source was matched during Phase 8A research.'
           : null),
     }
+    return { ...record, ...localizedSiteFields(record) }
   },
 )
 
 export const diveSiteEnrichmentSourceNotes = {
-  researchedAt: '2026-09-19',
+  researchedAt: '2026-09-20',
   scope:
     'Source-linked content references only. Live conditions are intentionally not asserted; divers must use current operator and authority guidance.',
   sourcePolicy:

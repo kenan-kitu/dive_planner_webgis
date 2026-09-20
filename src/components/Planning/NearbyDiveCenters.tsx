@@ -1,7 +1,11 @@
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { DiveCenterFeature } from '../../types/gis'
 import type { DistanceResult } from '../../utils/spatial'
-import { getDiveCenterEnrichment } from '../../utils/enrichment'
+import {
+  getDiveCenterEnrichment,
+  localizedPhotoCaption,
+  localizeDiveCenterEnrichment,
+} from '../../utils/enrichment'
 
 interface NearbyDiveCentersProps {
   selectedDiveSiteName: string
@@ -33,7 +37,7 @@ export function NearbyDiveCenters({
   compact = false,
   onSelectCenter,
 }: NearbyDiveCentersProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
 
   return (
     <section className={`nearby-centers${compact ? ' nearby-centers--compact' : ''}`} aria-labelledby="nearby-centers-title">
@@ -53,7 +57,10 @@ export function NearbyDiveCenters({
         <ol className="nearby-centers__list">
           {centers.map(({ feature, distanceNm }) => {
             const { properties } = feature
-            const enrichment = getDiveCenterEnrichment(properties.record_id)
+            const enrichment = localizeDiveCenterEnrichment(
+              getDiveCenterEnrichment(properties.record_id),
+              language,
+            )
             const website = safeWebsiteUrl(enrichment?.website ?? properties.website)
             const phone = enrichment?.phone ?? properties.phone
             const photo = enrichment?.photos[0]
@@ -65,8 +72,9 @@ export function NearbyDiveCenters({
                     <img
                       className="nearby-center-card__image"
                       src={photo.url}
-                      alt={photo.caption}
+                      alt={localizedPhotoCaption(photo, language, enrichment?.officialName ?? properties.name)}
                       loading="lazy"
+                      onError={(event) => { event.currentTarget.hidden = true }}
                     />
                   ) : null}
                   <header>
