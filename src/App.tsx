@@ -4,6 +4,12 @@ import { LanguageSwitcher } from './components/LanguageSwitcher/LanguageSwitcher
 import { DiveMap } from './components/Map/DiveMap'
 import { DiveCenterDetails } from './components/Details/DiveCenterDetails'
 import { DiveSiteDetails } from './components/Details/DiveSiteDetails'
+import {
+  GoalHeader,
+  GoalSelector,
+  OpeningExperience,
+  type UserGoal,
+} from './components/Goals/GoalExperience'
 import { PlanningPanel } from './components/Planning/PlanningPanel'
 import { ResultsSummary } from './components/Planning/ResultsSummary'
 import { ProjectSidebar } from './components/Sidebar/ProjectSidebar'
@@ -62,6 +68,20 @@ const INITIAL_DIVER_PROFILE: DiverProfileValue = {
 const DEFAULT_MAXIMUM_DISTANCE_NM = 10
 const MAXIMUM_DISTANCE_SLIDER_NM = 30
 const DEFAULT_BOAT_SPEED_KNOTS = 20
+const SESSION_GOAL_KEY = 'dive-planner-user-goal'
+const USER_GOALS: UserGoal[] = [
+  'findSites',
+  'exploreSite',
+  'boatTrip',
+  'findCenter',
+]
+
+function readSessionGoal(): UserGoal | null {
+  const storedGoal = window.sessionStorage.getItem(SESSION_GOAL_KEY)
+  return USER_GOALS.includes(storedGoal as UserGoal)
+    ? (storedGoal as UserGoal)
+    : null
+}
 
 function errorDetails(error: unknown): string {
   return error instanceof Error ? error.message : 'UNKNOWN_ERROR'
@@ -98,6 +118,11 @@ function App() {
   const [selectedDiveCenter, setSelectedDiveCenter] =
     useState<DiveCenterFeature | null>(null)
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false)
+  const [userGoal, setUserGoal] = useState<UserGoal | null>(readSessionGoal)
+  const [isOpeningExperienceOpen, setIsOpeningExperienceOpen] = useState(
+    userGoal === null,
+  )
+  const [showFullControls, setShowFullControls] = useState(false)
 
   const retry = useCallback(() => {
     setRequestVersion((version) => version + 1)
@@ -267,6 +292,47 @@ function App() {
     setIsMobilePanelOpen(true)
   }, [])
 
+  const selectGoal = useCallback((goal: UserGoal) => {
+    window.sessionStorage.setItem(SESSION_GOAL_KEY, goal)
+    setUserGoal(goal)
+    setShowFullControls(false)
+    setIsOpeningExperienceOpen(false)
+    setIsMobilePanelOpen(true)
+  }, [])
+
+  const changeGoal = useCallback(() => {
+    setIsOpeningExperienceOpen(true)
+    setIsMobilePanelOpen(false)
+  }, [])
+
+  const returnToMap = useCallback(() => {
+    setIsOpeningExperienceOpen(false)
+    setIsMobilePanelOpen(false)
+  }, [])
+
+  const openFullControls = useCallback(() => {
+    setShowFullControls(true)
+    setIsMobilePanelOpen(true)
+  }, [])
+
+  const isFullPlanningView = showFullControls || userGoal === null
+  const showCertification =
+    isFullPlanningView ||
+    userGoal === 'findSites' ||
+    (userGoal === 'exploreSite' && selectedDiveSite !== null)
+  const showPlanning =
+    isFullPlanningView ||
+    userGoal === 'findSites' ||
+    userGoal === 'boatTrip' ||
+    (userGoal === 'exploreSite' && selectedDiveSite !== null)
+  const showResults =
+    isFullPlanningView || userGoal === 'findSites' || userGoal === 'boatTrip'
+  const showPlanningSummary =
+    isFullPlanningView ||
+    userGoal === 'findSites' ||
+    userGoal === 'boatTrip' ||
+    userGoal === 'exploreSite'
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -291,9 +357,13 @@ function App() {
         >
           <div className="mobile-panel-header">
             <div>
-              <small>{t.planning.results}</small>
+              <small>
+                {userGoal ? t.goals.currentGoal : t.planning.results}
+              </small>
               <strong>
-                {resultCounts.matching} {t.planning.matchingDiveSites}
+                {userGoal
+                  ? t.goals.options[userGoal].title
+                  : `${resultCounts.matching} ${t.planning.matchingDiveSites}`}
               </strong>
             </div>
             <button
@@ -311,7 +381,30 @@ function App() {
               <h2>{t.app.shortTitle}</h2>
             </div>
 
-            <dl className="mobile-selection-summary">
+            {userGoal ? (
+              <GoalHeader
+                goal={userGoal}
+                onChangeGoal={changeGoal}
+                onShowFullControls={openFullControls}
+                onReturnToMap={returnToMap}
+              />
+            ) : null}
+
+            {!isFullPlanningView &&
+            (userGoal === 'exploreSite' || userGoal === 'findCenter') ? (
+              <GoalSelector
+                goal={userGoal}
+                diveSites={diveSites}
+                diveCenters={diveCenters}
+                selectedDiveSite={selectedDiveSite}
+                selectedDiveCenter={selectedDiveCenter}
+                onSelectDiveSite={selectDiveSite}
+                onSelectDiveCenter={selectDiveCenter}
+              />
+            ) : null}
+
+            {showPlanningSummary ? (
+              <dl className="mobile-selection-summary">
               <div>
                 <dt>{t.planning.certification}</dt>
                 <dd>{`${diverProfile.agency} ${selectedCertification?.name ?? ''}`}</dd>
@@ -337,44 +430,51 @@ function App() {
                   {boatSpeedKnots} {t.planning.knotAbbreviation}
                 </dd>
               </div>
-            </dl>
+              </dl>
+            ) : null}
 
-            <SidebarSection
-              title={t.planning.certification}
-              summary={`${diverProfile.agency} · ${selectedCertification?.name ?? ''}`}
-            >
-              <DiverProfile
-                profile={diverProfile}
-                effectiveDepthLimit={effectiveDepthLimit}
-                matchingSiteCount={resultCounts.matching}
-                totalSiteCount={totalSiteCount}
-                onChange={setDiverProfile}
-              />
-            </SidebarSection>
+            {showCertification ? (
+              <SidebarSection
+                title={t.planning.certification}
+                summary={`${diverProfile.agency} · ${selectedCertification?.name ?? ''}`}
+                initiallyOpen={userGoal === 'findSites'}
+              >
+                <DiverProfile
+                  profile={diverProfile}
+                  effectiveDepthLimit={effectiveDepthLimit}
+                  matchingSiteCount={resultCounts.matching}
+                  totalSiteCount={totalSiteCount}
+                  onChange={setDiverProfile}
+                />
+              </SidebarSection>
+            ) : null}
 
-            <SidebarSection
-              title={t.planning.divePlanning}
-              summary={`${selectedSiteTypeLabel} · ${selectedDeparture?.properties.name ?? t.planning.noDepartureSelected} · ${maximumDistanceNm} NM · ${boatSpeedKnots} ${t.planning.knotAbbreviation}`}
-              initiallyOpen
-            >
-              <PlanningPanel
-                departurePoints={departurePoints}
-                siteTypes={siteTypes}
-                selectedDepartureId={selectedDepartureId}
-                selectedSiteType={selectedSiteType}
-                maximumDistanceNm={maximumDistanceNm}
-                maximumSliderDistanceNm={MAXIMUM_DISTANCE_SLIDER_NM}
-                boatSpeedKnots={boatSpeedKnots}
-                selectedDiveSiteName={
-                  selectedDiveSite?.properties.site_name ?? null
-                }
-                selectedDiveSiteDistanceNm={selectedDiveSiteDistanceNm}
-                onDepartureChange={setSelectedDepartureId}
-                onSiteTypeChange={setSelectedSiteType}
-                onMaximumDistanceChange={setMaximumDistanceNm}
-                onBoatSpeedChange={setBoatSpeedKnots}
-              />
-            </SidebarSection>
+            {showPlanning ? (
+              <SidebarSection
+                title={t.planning.divePlanning}
+                summary={`${selectedSiteTypeLabel} · ${selectedDeparture?.properties.name ?? t.planning.noDepartureSelected} · ${maximumDistanceNm} NM · ${boatSpeedKnots} ${t.planning.knotAbbreviation}`}
+                initiallyOpen={userGoal === 'boatTrip' || isFullPlanningView}
+              >
+                <PlanningPanel
+                  departurePoints={departurePoints}
+                  siteTypes={siteTypes}
+                  selectedDepartureId={selectedDepartureId}
+                  selectedSiteType={selectedSiteType}
+                  maximumDistanceNm={maximumDistanceNm}
+                  maximumSliderDistanceNm={MAXIMUM_DISTANCE_SLIDER_NM}
+                  boatSpeedKnots={boatSpeedKnots}
+                  selectedDiveSiteName={
+                    selectedDiveSite?.properties.site_name ?? null
+                  }
+                  selectedDiveSiteDistanceNm={selectedDiveSiteDistanceNm}
+                  onDepartureChange={setSelectedDepartureId}
+                  onSiteTypeChange={setSelectedSiteType}
+                  onMaximumDistanceChange={setMaximumDistanceNm}
+                  onBoatSpeedChange={setBoatSpeedKnots}
+                  showDiveType={userGoal !== 'boatTrip' || isFullPlanningView}
+                />
+              </SidebarSection>
+            ) : null}
 
             {selectedDiveSite && (
               <DiveSiteDetails
@@ -394,17 +494,19 @@ function App() {
               />
             )}
 
-            <ResultsSummary
-              totalSiteCount={totalSiteCount}
-              matchingSiteCount={resultCounts.matching}
-              depthMatchCount={resultCounts.depth}
-              distanceMatchCount={
-                selectedDeparture ? resultCounts.distance : null
-              }
-              selectedDepartureName={
-                selectedDeparture?.properties.name ?? null
-              }
-            />
+            {showResults ? (
+              <ResultsSummary
+                totalSiteCount={totalSiteCount}
+                matchingSiteCount={resultCounts.matching}
+                depthMatchCount={resultCounts.depth}
+                distanceMatchCount={
+                  selectedDeparture ? resultCounts.distance : null
+                }
+                selectedDepartureName={
+                  selectedDeparture?.properties.name ?? null
+                }
+              />
+            ) : null}
 
             <SidebarSection
               title={t.planning.mapLayers}
@@ -455,6 +557,12 @@ function App() {
             <div className="map-message">{t.status.loadingMapLayers}</div>
           )}
         </section>
+        {isOpeningExperienceOpen ? (
+          <OpeningExperience
+            onSelect={selectGoal}
+            onReturnToMap={returnToMap}
+          />
+        ) : null}
         <button
           className="mobile-filter-toggle"
           type="button"

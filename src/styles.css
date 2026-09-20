@@ -147,9 +147,241 @@ select {
 }
 
 .workspace {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(380px, 430px) minmax(0, 1fr);
   min-height: 0;
+}
+
+.opening-experience {
+  position: absolute;
+  z-index: 1600;
+  inset: 0;
+  display: grid;
+  padding: clamp(18px, 4vw, 48px);
+  overflow-y: auto;
+  background:
+    linear-gradient(135deg, rgb(7 47 58 / 88%), rgb(4 83 96 / 72%)),
+    rgb(7 47 58 / 78%);
+  backdrop-filter: blur(5px);
+  place-items: center;
+}
+
+.opening-experience__panel {
+  width: min(940px, 100%);
+  padding: clamp(22px, 4vw, 40px);
+  border: 1px solid rgb(153 220 222 / 55%);
+  border-radius: 24px;
+  background: rgb(249 252 252 / 98%);
+  box-shadow: 0 24px 70px rgb(3 29 36 / 36%);
+}
+
+.opening-experience__panel > header {
+  max-width: 720px;
+  margin: 0 auto 24px;
+  text-align: center;
+}
+
+.opening-experience__panel h2 {
+  margin: 0;
+  color: #0d3a46;
+  font-size: clamp(1.65rem, 4vw, 2.45rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.opening-experience__panel > header > p:last-child {
+  margin: 12px 0 0;
+  color: #58747c;
+  line-height: 1.55;
+}
+
+.goal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.goal-option {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 142px;
+  padding: 18px;
+  color: #173f49;
+  text-align: left;
+  border: 1px solid #c7dadd;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(18 65 76 / 7%);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.goal-option:hover,
+.goal-option:focus-visible {
+  border-color: #1596a4;
+  box-shadow: 0 12px 28px rgb(18 101 113 / 15%);
+  transform: translateY(-2px);
+}
+
+.goal-option:focus-visible,
+.goal-context button:focus-visible,
+.opening-experience__map-button:focus-visible {
+  outline: 3px solid #ffd37a;
+  outline-offset: 2px;
+}
+
+.goal-option__icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  color: #075d6a;
+  font-size: 1.35rem;
+  font-weight: 800;
+  border-radius: 13px;
+  background: #d7f3f2;
+  place-items: center;
+}
+
+.goal-option__copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.goal-option__copy small,
+.goal-selector > small,
+.goal-context__heading small {
+  color: #078293;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.goal-option__copy strong {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.goal-option__copy > span:last-child {
+  color: #617b82;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.goal-option__arrow {
+  color: #168b99;
+  font-size: 1.75rem;
+}
+
+.opening-experience__map-button {
+  display: block;
+  min-height: 44px;
+  margin: 20px auto 0;
+  padding: 8px 16px;
+  color: #315d66;
+  font-weight: 750;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.goal-context,
+.goal-selector {
+  padding: 16px;
+  border: 1px solid #c8dade;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 7px 20px rgb(18 65 76 / 6%);
+}
+
+.goal-context__heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.goal-context__heading h2,
+.goal-selector h3 {
+  margin: 3px 0 0;
+  color: #123f49;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.goal-context > p,
+.goal-selector > p {
+  margin: 12px 0;
+  color: #607b82;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.goal-context__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.goal-context__actions button {
+  min-height: 38px;
+  padding: 7px 10px;
+  color: #086b78;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 1px solid #b9d2d5;
+  border-radius: 8px;
+  background: #f4fafa;
+  cursor: pointer;
+}
+
+.goal-selector__field {
+  display: grid;
+  gap: 6px;
+  color: #425f68;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.goal-selector__field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 10px;
+  color: #173f49;
+  border: 1px solid #bfd3d6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.goal-selector__choices {
+  display: grid;
+  gap: 10px;
+}
+
+.goal-selector__choices > div {
+  display: grid;
+  gap: 8px;
+}
+
+.goal-selector__choices > div > strong {
+  color: #315d66;
+  font-size: 0.74rem;
+}
+
+.goal-selector__or {
+  color: #809398;
+  font-size: 0.68rem;
+  font-weight: 750;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .sidebar {
@@ -1930,6 +2162,58 @@ footer strong {
     display: block;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .opening-experience {
+    position: fixed;
+    z-index: 1700;
+    top: 0;
+    padding: 12px;
+    place-items: start center;
+  }
+
+  .opening-experience__panel {
+    margin: max(8px, env(safe-area-inset-top)) 0
+      max(8px, env(safe-area-inset-bottom));
+    padding: 22px 14px 16px;
+    border-radius: 20px;
+  }
+
+  .opening-experience__panel > header {
+    margin-bottom: 16px;
+  }
+
+  .opening-experience__panel > header > p:last-child {
+    font-size: 0.82rem;
+  }
+
+  .goal-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .goal-option {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    min-height: 112px;
+    padding: 14px;
+  }
+
+  .goal-option__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .goal-option__copy > span:last-child {
+    font-size: 0.73rem;
+  }
+
+  .goal-context__actions button {
+    min-height: 44px;
+  }
+
+  .goal-selector__field select {
+    min-height: 48px;
+    font-size: 16px;
   }
 
   .sidebar {

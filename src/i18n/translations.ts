@@ -4,7 +4,7 @@ export const translations = {
       title: 'Florida Keys Interactive Dive Planner',
       shortTitle: 'Florida Keys Dive Planner',
       kicker: 'Educational WebGIS',
-      phase: 'Phase 8B',
+      phase: 'Phase 8C',
       mapAriaLabel: 'Interactive dive-site map',
     },
     language: {
@@ -157,6 +157,52 @@ export const translations = {
       openFilters: 'Plan dive',
       closeFilters: 'Close planning panel',
     },
+    goals: {
+      eyebrow: 'Start with your goal',
+      question: 'What would you like to do?',
+      intro:
+        'Choose one path. We will show only the next relevant planning step, and you can change your goal or open every control at any time.',
+      step: 'Option',
+      currentGoal: 'Current goal',
+      changeGoal: 'Change Goal',
+      fullControls: 'Full Planning Controls',
+      returnToMap: 'Return to Map',
+      firstStep: 'Step 1',
+      selectDiveSite: 'Dive site',
+      chooseDiveSite: 'Choose a dive site',
+      chooseDiveCenter: 'Choose a dive center',
+      pickSiteHeading: 'Which dive site would you like to explore?',
+      pickSiteHelp:
+        'Select a site to see its rich details, certification suitability, nearby centers and boat departure options.',
+      findCenterHeading: 'How would you like to find a dive center?',
+      findCenterHelp:
+        'Start from a dive site to see nearby centers, or select a center directly for its full details.',
+      byDiveSite: 'Find centers near a dive site',
+      byDiveCenter: 'Select a dive center directly',
+      or: 'or',
+      options: {
+        findSites: {
+          title: 'Find Dive Sites for Me',
+          description:
+            'Tell us your certification and preferred dive type, then optionally add a departure point and maximum boat distance to see suitable matches.',
+        },
+        exploreSite: {
+          title: 'Explore a Specific Dive Site',
+          description:
+            'Choose a site to view rich details, certification suitability, nearby dive centers, departure options, distance and travel time.',
+        },
+        boatTrip: {
+          title: 'Plan a Boat Trip',
+          description:
+            'Choose a departure point, maximum distance and boat speed to see the reach zone and reachable dive sites.',
+        },
+        findCenter: {
+          title: 'Find a Dive Center',
+          description:
+            'Find centers near a selected dive site, or choose a center directly to view its details and nearby dive opportunities.',
+        },
+      },
+    },
     credit: 'Developed by Kenan Karaca',
     disclaimer:
       'Educational WebGIS prototype. Depth attributes may include demonstration data and must not be used for marine navigation or dive-safety decisions.',
@@ -166,7 +212,7 @@ export const translations = {
       title: 'Florida Keys Etkileşimli Dalış Planlayıcı',
       shortTitle: 'Florida Keys Dalış Planlayıcı',
       kicker: 'Eğitsel WebGIS',
-      phase: 'Faz 8B',
+      phase: 'Faz 8C',
       mapAriaLabel: 'Etkileşimli dalış noktaları haritası',
     },
     language: {
@@ -318,6 +364,52 @@ export const translations = {
       mapLayers: 'Harita Katmanları',
       openFilters: 'Dalış planla',
       closeFilters: 'Planlama panelini kapat',
+    },
+    goals: {
+      eyebrow: 'Amacınızla başlayın',
+      question: 'Ne yapmak istiyorsunuz?',
+      intro:
+        'Bir yol seçin. Yalnızca sıradaki ilgili planlama adımını göstereceğiz; amacınızı değiştirebilir veya tüm kontrollere istediğiniz zaman ulaşabilirsiniz.',
+      step: 'Seçenek',
+      currentGoal: 'Mevcut amaç',
+      changeGoal: 'Amacı Değiştir',
+      fullControls: 'Tüm Planlama Kontrolleri',
+      returnToMap: 'Haritaya Dön',
+      firstStep: '1. Adım',
+      selectDiveSite: 'Dalış noktası',
+      chooseDiveSite: 'Bir dalış noktası seçin',
+      chooseDiveCenter: 'Bir dalış merkezi seçin',
+      pickSiteHeading: 'Hangi dalış noktasını incelemek istiyorsunuz?',
+      pickSiteHelp:
+        'Zengin ayrıntıları, sertifika uygunluğunu, yakındaki merkezleri ve tekne kalkış seçeneklerini görmek için bir nokta seçin.',
+      findCenterHeading: 'Dalış merkezini nasıl bulmak istiyorsunuz?',
+      findCenterHelp:
+        'Yakındaki merkezleri görmek için bir dalış noktasından başlayın veya tüm ayrıntıları için doğrudan bir merkez seçin.',
+      byDiveSite: 'Dalış noktasına yakın merkezleri bul',
+      byDiveCenter: 'Doğrudan dalış merkezi seç',
+      or: 'veya',
+      options: {
+        findSites: {
+          title: 'Bana Uygun Dalış Noktalarını Bul',
+          description:
+            'Sertifikanızı ve tercih ettiğiniz dalış türünü belirtin; uygun eşleşmeler için isterseniz kalkış noktası ve maksimum tekne mesafesi ekleyin.',
+        },
+        exploreSite: {
+          title: 'Belirli Bir Dalış Noktasını İncele',
+          description:
+            'Zengin ayrıntıları, sertifika uygunluğunu, yakındaki dalış merkezlerini, kalkış seçeneklerini, mesafeyi ve seyahat süresini görmek için bir nokta seçin.',
+        },
+        boatTrip: {
+          title: 'Tekneyle Dalış Planla',
+          description:
+            'Erişim alanını ve ulaşılabilir dalış noktalarını görmek için kalkış noktası, maksimum mesafe ve tekne hızı seçin.',
+        },
+        findCenter: {
+          title: 'Dalış Merkezi Bul',
+          description:
+            'Seçilen dalış noktasına yakın merkezleri bulun veya ayrıntıları ve yakındaki dalış fırsatlarını görmek için doğrudan bir merkez seçin.',
+        },
+      },
     },
     credit: 'Kenan Karaca tarafından geliştirildi',
     disclaimer:

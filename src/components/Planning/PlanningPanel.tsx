@@ -20,6 +20,7 @@ interface PlanningPanelProps {
   onSiteTypeChange: (siteType: string | null) => void
   onMaximumDistanceChange: (distanceNm: number) => void
   onBoatSpeedChange: (speedKnots: number) => void
+  showDiveType?: boolean
 }
 
 const GENERIC_DEPARTURE_NAME = /^(boat ramp|boat launch|marina|dock|pier|unnamed)/i
@@ -55,6 +56,7 @@ export function PlanningPanel({
   onSiteTypeChange,
   onMaximumDistanceChange,
   onBoatSpeedChange,
+  showDiveType = true,
 }: PlanningPanelProps) {
   const { t } = useLanguage()
   const [search, setSearch] = useState('')
@@ -111,22 +113,26 @@ export function PlanningPanel({
         <h2 id="planning-panel-title">{t.planning.divePlanning}</h2>
       </header>
 
-      <label className="planning-field">
-        <span>{t.planning.diveType}</span>
-        <select
-          value={selectedSiteType ?? ''}
-          onChange={(event) =>
-            onSiteTypeChange(event.target.value || null)
-          }
-        >
-          <option value="">{t.planning.allDiveTypes}</option>
-          {siteTypes.map((siteType) => (
-            <option key={siteType} value={siteType}>
-              {t.dataValues[siteType.toLowerCase() as 'reef' | 'wreck' | 'wall'] ?? siteType}
-            </option>
-          ))}
-        </select>
-      </label>
+      {showDiveType ? (
+        <label className="planning-field">
+          <span>{t.planning.diveType}</span>
+          <select
+            value={selectedSiteType ?? ''}
+            onChange={(event) =>
+              onSiteTypeChange(event.target.value || null)
+            }
+          >
+            <option value="">{t.planning.allDiveTypes}</option>
+            {siteTypes.map((siteType) => (
+              <option key={siteType} value={siteType}>
+                {t.dataValues[
+                  siteType.toLowerCase() as 'reef' | 'wreck' | 'wall'
+                ] ?? siteType}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
 
       <div className="departure-picker">
         <label className="planning-field">
