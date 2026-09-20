@@ -142,6 +142,9 @@ function App() {
   const [siteCatalogType, setSiteCatalogType] = useState<string | null>(null)
   const [centerCatalogSearch, setCenterCatalogSearch] = useState('')
   const [catalogView, setCatalogView] = useState<'list' | 'map'>('list')
+  const [isDesktopLayout, setIsDesktopLayout] = useState(() =>
+    window.matchMedia('(min-width: 1000px)').matches,
+  )
 
   const retry = useCallback(() => {
     setRequestVersion((version) => version + 1)
@@ -149,6 +152,13 @@ function App() {
 
   const toggleLayer = useCallback((layer: MapLayerKey) => {
     setVisibility((current) => ({ ...current, [layer]: !current[layer] }))
+  }, [])
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1000px)')
+    const syncLayout = () => setIsDesktopLayout(media.matches)
+    media.addEventListener('change', syncLayout)
+    return () => media.removeEventListener('change', syncLayout)
   }, [])
 
   useEffect(() => {
@@ -514,7 +524,13 @@ function App() {
         </div>
       </header>
 
-      <main className="workspace">
+      <main
+        className={`workspace${
+          isDesktopLayout && (selectedDiveSite || selectedDiveCenter)
+            ? ' has-detail-panel'
+            : ''
+        }`}
+      >
         <aside
           className={`sidebar${isMobilePanelOpen ? ' is-mobile-open' : ''}`}
           id="planning-panel"
@@ -616,7 +632,6 @@ function App() {
               <SidebarSection
                 title={t.planning.certification}
                 summary={`${diverProfile.agency} · ${selectedCertification?.name ?? ''}`}
-                initiallyOpen
               >
                 <DiverProfile
                   profile={diverProfile}
@@ -772,7 +787,7 @@ function App() {
               </>
             ) : null}
 
-            {selectedDiveSite && userGoal !== 'findCenter' && !selectedDiveCenter ? (
+            {!isDesktopLayout && selectedDiveSite && userGoal !== 'findCenter' && !selectedDiveCenter ? (
               <DiveSiteDetails
                 site={selectedDiveSite}
                 enrichment={selectedSiteEnrichment}
@@ -787,7 +802,7 @@ function App() {
               />
             ) : null}
 
-            {selectedDiveCenter ? (
+            {!isDesktopLayout && selectedDiveCenter ? (
               <DiveCenterDetails
                 center={selectedDiveCenter}
                 enrichment={selectedCenterEnrichment}
@@ -863,6 +878,39 @@ function App() {
             <div className="map-message">{t.status.loadingMapLayers}</div>
           )}
         </section>
+        {isDesktopLayout && (selectedDiveSite || selectedDiveCenter) ? (
+          <aside className="detail-panel" aria-label={t.map.closeDetails}>
+            <div className="detail-panel__toolbar">
+              <button type="button" onClick={clearDetail}>
+                <span aria-hidden="true">×</span>
+                {t.map.closeDetails}
+              </button>
+            </div>
+            <div className="detail-panel__content">
+              {selectedDiveCenter ? (
+                <DiveCenterDetails
+                  center={selectedDiveCenter}
+                  enrichment={selectedCenterEnrichment}
+                  nearbySites={nearbySitesForCenter}
+                  onSelectSite={selectDiveSite}
+                />
+              ) : selectedDiveSite ? (
+                <DiveSiteDetails
+                  site={selectedDiveSite}
+                  enrichment={selectedSiteEnrichment}
+                  selectedDeparture={selectedDeparture}
+                  directDistanceNm={selectedDiveSiteDistanceNm}
+                  boatSpeedKnots={boatSpeedKnots}
+                  nearbyCenters={nearbyDiveCenters}
+                  nearbyDepartures={nearbyDepartureOptions}
+                  certificationLabel={certificationLabel}
+                  effectiveDepthLimit={effectiveDepthLimit}
+                  onSelectCenter={selectDiveCenter}
+                />
+              ) : null}
+            </div>
+          </aside>
+        ) : null}
         {isOpeningExperienceOpen ? (
           <OpeningExperience
             onSelect={selectGoal}

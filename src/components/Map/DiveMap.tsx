@@ -1,7 +1,21 @@
-import { divIcon, marker, type Layer, type Marker } from 'leaflet'
-import { useMemo } from 'react'
-import { GeoJSON, MapContainer, TileLayer, ZoomControl } from 'react-leaflet'
+import { marker, type Layer } from 'leaflet'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  GeoJSON,
+  MapContainer,
+  TileLayer,
+  useMap,
+  ZoomControl,
+} from 'react-leaflet'
 import type { LayerState } from '../../App'
+import {
+  BASEMAPS,
+  createMapIcon,
+  diveSiteSymbol,
+  MAP_ANALYSIS_STYLES,
+  NAUTICAL_OVERLAY,
+  type BasemapId,
+} from '../../config/mapStyles'
 import { certificationTranslations } from '../../i18n/certificationTranslations'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { Translation } from '../../i18n/translations'
@@ -19,6 +33,7 @@ import {
   createDirectRouteLine,
   createReachZone,
 } from '../../utils/spatial'
+import { MapOverlayControls } from './MapOverlayControls'
 
 interface DiveMapProps {
   diveSites: DiveSiteCollection | null
@@ -41,79 +56,65 @@ interface DiveMapProps {
 }
 
 const FLORIDA_KEYS_CENTER: [number, number] = [24.72, -81.1]
+const SESSION_BASEMAP_KEY = 'dive-planner-basemap'
+const SESSION_NAUTICAL_KEY = 'dive-planner-nautical-overlay'
 
-const MAP_ICONS = {
-  diveSites: divIcon({
-    className: 'feature-marker-wrapper',
-    html: '<span class="feature-marker feature-marker--dive-site"><span></span></span>',
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-    popupAnchor: [0, -8],
-  }),
-  diveSitesMuted: divIcon({
-    className: 'feature-marker-wrapper',
-    html: '<span class="feature-marker feature-marker--dive-site feature-marker--outside-depth"><span></span></span>',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-    popupAnchor: [0, -7],
-  }),
-  diveSiteSelected: divIcon({
-    className: 'feature-marker-wrapper feature-marker-wrapper--site-selected',
-    html: '<span class="feature-marker feature-marker--dive-site feature-marker--dive-site-selected"><span></span></span>',
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-    popupAnchor: [0, -8],
-  }),
-  diveCenters: divIcon({
-    className: 'feature-marker-wrapper',
-    html: '<span class="feature-marker feature-marker--dive-center" aria-hidden="true">+</span>',
-    iconSize: [17, 17],
-    iconAnchor: [8.5, 8.5],
-    popupAnchor: [0, -9],
-  }),
-  diveCentersMuted: divIcon({
-    className: 'feature-marker-wrapper',
-    html: '<span class="feature-marker feature-marker--dive-center feature-marker--dive-center-muted" aria-hidden="true">+</span>',
-    iconSize: [15, 15],
-    iconAnchor: [7.5, 7.5],
-    popupAnchor: [0, -8],
-  }),
-  diveCentersNearby: divIcon({
-    className: 'feature-marker-wrapper feature-marker-wrapper--nearby-center',
-    html: '<span class="feature-marker feature-marker--dive-center feature-marker--dive-center-nearby" aria-hidden="true">+</span>',
-    iconSize: [21, 21],
-    iconAnchor: [10.5, 10.5],
-    popupAnchor: [0, -11],
-  }),
-  diveCenterSelected: divIcon({
-    className: 'feature-marker-wrapper feature-marker-wrapper--center-selected',
-    html: '<span class="feature-marker feature-marker--dive-center feature-marker--dive-center-selected" aria-hidden="true">+</span>',
-    iconSize: [23, 23],
-    iconAnchor: [11.5, 11.5],
-    popupAnchor: [0, -12],
-  }),
-  departurePoints: divIcon({
-    className: 'feature-marker-wrapper',
-    html: '<span class="feature-marker feature-marker--departure"><span></span></span>',
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-    popupAnchor: [0, -8],
-  }),
-  departurePointsMuted: divIcon({
-    className: 'feature-marker-wrapper',
-    html: '<span class="feature-marker feature-marker--departure feature-marker--departure-muted"><span></span></span>',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-    popupAnchor: [0, -7],
-  }),
-  departurePointSelected: divIcon({
-    className: 'feature-marker-wrapper feature-marker-wrapper--selected',
-    html: '<span class="feature-marker feature-marker--departure feature-marker--departure-selected"><span></span></span>',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -12],
-  }),
-} as const
+function readBasemap(): BasemapId {
+  const value = window.sessionStorage.getItem(SESSION_BASEMAP_KEY)
+  return value === 'street' || value === 'satellite' ? value : 'light'
+}
+
+function featureLatLng(
+  feature: DiveSiteFeature | DiveCenterFeature | DeparturePointFeature,
+): [number, number] {
+  const [longitude, latitude] = feature.geometry.coordinates
+  return [latitude, longitude]
+}
+
+function MapFocusController({
+  selectedDeparture,
+  selectedDiveSite,
+  selectedDiveCenter,
+}: Pick<
+  DiveMapProps,
+  'selectedDeparture' | 'selectedDiveSite' | 'selectedDiveCenter'
+>) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (selectedDeparture && selectedDiveSite) {
+      map.fitBounds(
+        [featureLatLng(selectedDeparture), featureLatLng(selectedDiveSite)],
+        { animate: true, duration: 0.6, maxZoom: 11, padding: [52, 52] },
+      )
+      return
+    }
+
+    const selectedFeature = selectedDiveCenter ?? selectedDiveSite
+    if (selectedFeature) {
+      map.flyTo(featureLatLng(selectedFeature), Math.max(map.getZoom(), 10), {
+        animate: true,
+        duration: 0.55,
+      })
+    }
+  }, [map, selectedDeparture, selectedDiveCenter, selectedDiveSite])
+
+  return null
+}
+
+function MapResizeController() {
+  const map = useMap()
+
+  useEffect(() => {
+    const container = map.getContainer()
+    const observer = new ResizeObserver(() => map.invalidateSize({ pan: false }))
+    observer.observe(container)
+
+    return () => observer.disconnect()
+  }, [map])
+
+  return null
+}
 
 function escapeHtml(value: string): string {
   return value.replace(
@@ -215,7 +216,12 @@ export function DiveMap({
   onSelectDiveCenter,
 }: DiveMapProps) {
   const { language, t } = useLanguage()
+  const [basemap, setBasemap] = useState<BasemapId>(readBasemap)
+  const [nauticalVisible, setNauticalVisible] = useState(
+    () => window.sessionStorage.getItem(SESSION_NAUTICAL_KEY) === 'true',
+  )
   const certificationCopy = certificationTranslations[language]
+  const basemapDefinition = BASEMAPS[basemap]
   const reachZone = useMemo(
     () =>
       selectedDeparture
@@ -231,8 +237,18 @@ export function DiveMap({
     [selectedDeparture, selectedDiveSite],
   )
 
+  const changeBasemap = (nextBasemap: BasemapId) => {
+    window.sessionStorage.setItem(SESSION_BASEMAP_KEY, nextBasemap)
+    setBasemap(nextBasemap)
+  }
+  const changeNautical = (visible: boolean) => {
+    window.sessionStorage.setItem(SESSION_NAUTICAL_KEY, String(visible))
+    setNauticalVisible(visible)
+  }
+
   return (
-    <MapContainer
+    <>
+      <MapContainer
       center={FLORIDA_KEYS_CENTER}
       zoom={8}
       minZoom={6}
@@ -247,9 +263,35 @@ export function DiveMap({
         zoomOutTitle={t.map.zoomOut}
       />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        key={basemap}
+        attribution={basemapDefinition.attribution}
+        url={basemapDefinition.url}
+        maxZoom={basemapDefinition.maxZoom}
       />
+      {basemapDefinition.labelUrl ? (
+        <TileLayer
+          key={`${basemap}-labels`}
+          url={basemapDefinition.labelUrl}
+          maxZoom={basemapDefinition.maxZoom}
+          pane="overlayPane"
+        />
+      ) : null}
+      {nauticalVisible ? (
+        <TileLayer
+          key="nautical-seamarks"
+          attribution={NAUTICAL_OVERLAY.attribution}
+          url={NAUTICAL_OVERLAY.url}
+          maxZoom={NAUTICAL_OVERLAY.maxZoom}
+          pane="overlayPane"
+        />
+      ) : null}
+
+      <MapFocusController
+        selectedDeparture={selectedDeparture}
+        selectedDiveSite={selectedDiveSite}
+        selectedDiveCenter={selectedDiveCenter}
+      />
+      <MapResizeController />
 
       {reachZone && (
         <GeoJSON
@@ -257,11 +299,11 @@ export function DiveMap({
           data={reachZone}
           style={{
             className: 'reach-zone-path',
-            color: '#147d8c',
+            color: MAP_ANALYSIS_STYLES.reachZone.color,
             weight: 1.5,
             opacity: 0.72,
-            fillColor: '#35aab5',
-            fillOpacity: 0.1,
+            fillColor: MAP_ANALYSIS_STYLES.reachZone.fillColor,
+            fillOpacity: 0.08,
           }}
           onEachFeature={(_, layer: Layer) => {
             layer.bindTooltip(
@@ -278,8 +320,8 @@ export function DiveMap({
           data={directRoute}
           style={{
             className: 'direct-route-path',
-            color: '#f07832',
-            weight: 3,
+            color: MAP_ANALYSIS_STYLES.directRoute.color,
+            weight: 3.5,
             opacity: 0.92,
             dashArray: '8 7',
           }}
@@ -302,11 +344,10 @@ export function DiveMap({
               departure.properties.record_id ===
               selectedDeparture?.properties.record_id
             return marker(latlng, {
-              icon: isSelected
-                ? MAP_ICONS.departurePointSelected
-                : selectedDeparture
-                  ? MAP_ICONS.departurePointsMuted
-                  : MAP_ICONS.departurePoints,
+              icon: createMapIcon(
+                'departure',
+                isSelected ? 'selected' : selectedDeparture ? 'muted' : 'default',
+              ),
               title: (feature as DeparturePointFeature).properties.name,
             })
           }}
@@ -342,15 +383,18 @@ export function DiveMap({
             const isCatalogResult = resultCenterIds.has(center.properties.record_id)
 
             return marker(latlng, {
-              icon: isSelected
-                ? MAP_ICONS.diveCenterSelected
-                : !isCatalogResult
-                  ? MAP_ICONS.diveCentersMuted
-                  : selectedDiveSite
-                ? isNearby
-                  ? MAP_ICONS.diveCentersNearby
-                  : MAP_ICONS.diveCentersMuted
-                : MAP_ICONS.diveCenters,
+              icon: createMapIcon(
+                'diveCenter',
+                isSelected
+                  ? 'selected'
+                  : !isCatalogResult
+                    ? 'muted'
+                    : selectedDiveSite
+                      ? isNearby
+                        ? 'nearby'
+                        : 'muted'
+                      : 'default',
+              ),
               title: center.properties.name,
             })
           }}
@@ -378,20 +422,22 @@ export function DiveMap({
 
       {visibility.diveSites && diveSites && (
         <GeoJSON
-          key={`dive-sites-${language}-${analysisKey}`}
+          key={`dive-sites-${language}-${analysisKey}-${selectedDiveSite?.properties.site_name ?? 'none'}`}
           data={diveSites}
           pointToLayer={(feature, latlng) => {
             const site = feature as DiveSiteFeature
             const properties = site.properties
             const result = siteAnalysis.get(site)
             const isSelected = site === selectedDiveSite
+            const isMatching =
+              resultSiteNames.has(properties.site_name) &&
+              Boolean(result?.isFullMatch)
 
             return marker(latlng, {
-              icon: isSelected
-                ? MAP_ICONS.diveSiteSelected
-                : resultSiteNames.has(properties.site_name)
-                  ? MAP_ICONS.diveSites
-                  : MAP_ICONS.diveSitesMuted,
+              icon: createMapIcon(
+                diveSiteSymbol(properties.site_type),
+                isSelected ? 'selected' : isMatching ? 'matching' : 'muted',
+              ),
               title: properties.site_name,
             })
           }}
@@ -422,26 +468,6 @@ export function DiveMap({
               : ''
 
             layer.on('click', () => {
-              document
-                .querySelectorAll('.feature-marker--dive-site-selected')
-                .forEach((element) =>
-                  element.classList.remove('feature-marker--dive-site-selected'),
-                )
-              document
-                .querySelectorAll('.feature-marker-wrapper--site-selected')
-                .forEach((element) =>
-                  element.classList.remove(
-                    'feature-marker-wrapper--site-selected',
-                  ),
-                )
-
-              const markerElement = (layer as Marker).getElement()
-              markerElement?.classList.add(
-                'feature-marker-wrapper--site-selected',
-              )
-              markerElement
-                ?.querySelector('.feature-marker--dive-site')
-                ?.classList.add('feature-marker--dive-site-selected')
               onSelectDiveSite(site)
             })
 
@@ -462,6 +488,13 @@ export function DiveMap({
           }}
         />
       )}
-    </MapContainer>
+      </MapContainer>
+      <MapOverlayControls
+        basemap={basemap}
+        nauticalVisible={nauticalVisible}
+        onBasemapChange={changeBasemap}
+        onNauticalChange={changeNautical}
+      />
+    </>
   )
 }
