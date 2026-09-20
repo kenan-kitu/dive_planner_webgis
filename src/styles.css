@@ -176,6 +176,12 @@ select {
   box-shadow: 0 24px 70px rgb(3 29 36 / 36%);
 }
 
+.opening-experience__language {
+  display: flex;
+  justify-content: flex-end;
+  margin: -10px -10px 8px 0;
+}
+
 .opening-experience__panel > header {
   max-width: 720px;
   margin: 0 auto 24px;

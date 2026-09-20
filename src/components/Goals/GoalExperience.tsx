@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useLanguage } from '../../i18n/LanguageContext'
+import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
 import type {
   DiveCenterCollection,
   DiveCenterFeature,
@@ -46,6 +47,9 @@ export function OpeningExperience({
       aria-labelledby="opening-experience-title"
     >
       <div className="opening-experience__panel">
+        <div className="opening-experience__language">
+          <LanguageSwitcher />
+        </div>
         <header>
           <p className="eyebrow">{t.goals.eyebrow}</p>
           <h2 id="opening-experience-title">{t.goals.question}</h2>
