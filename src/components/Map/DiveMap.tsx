@@ -29,11 +29,13 @@ interface DiveMapProps {
   analysisKey: string
   selectedDeparture: DeparturePointFeature | null
   selectedDiveSite: DiveSiteFeature | null
+  selectedDiveCenter: DiveCenterFeature | null
   nearbyDiveCenterIds: ReadonlySet<number>
   maximumDistanceNm: number
   boatSpeedKnots: number
   onSelectDeparture: (recordId: number) => void
   onSelectDiveSite: (site: DiveSiteFeature) => void
+  onSelectDiveCenter: (center: DiveCenterFeature) => void
 }
 
 const FLORIDA_KEYS_CENTER: [number, number] = [24.72, -81.1]
@@ -80,6 +82,13 @@ const MAP_ICONS = {
     iconSize: [21, 21],
     iconAnchor: [10.5, 10.5],
     popupAnchor: [0, -11],
+  }),
+  diveCenterSelected: divIcon({
+    className: 'feature-marker-wrapper feature-marker-wrapper--center-selected',
+    html: '<span class="feature-marker feature-marker--dive-center feature-marker--dive-center-selected" aria-hidden="true">+</span>',
+    iconSize: [23, 23],
+    iconAnchor: [11.5, 11.5],
+    popupAnchor: [0, -12],
   }),
   departurePoints: divIcon({
     className: 'feature-marker-wrapper',
@@ -193,11 +202,13 @@ export function DiveMap({
   analysisKey,
   selectedDeparture,
   selectedDiveSite,
+  selectedDiveCenter,
   nearbyDiveCenterIds,
   maximumDistanceNm,
   boatSpeedKnots,
   onSelectDeparture,
   onSelectDiveSite,
+  onSelectDiveCenter,
 }: DiveMapProps) {
   const { language, t } = useLanguage()
   const certificationCopy = certificationTranslations[language]
@@ -318,14 +329,17 @@ export function DiveMap({
 
       {visibility.diveCenters && diveCenters && (
         <GeoJSON
-          key={`dive-centers-${language}-${selectedDiveSite?.properties.site_name ?? 'none'}-${Array.from(nearbyDiveCenterIds).join('-')}`}
+          key={`dive-centers-${language}-${selectedDiveSite?.properties.site_name ?? 'none'}-${selectedDiveCenter?.properties.record_id ?? 'none'}-${Array.from(nearbyDiveCenterIds).join('-')}`}
           data={diveCenters}
           pointToLayer={(feature, latlng) => {
             const center = feature as DiveCenterFeature
             const isNearby = nearbyDiveCenterIds.has(center.properties.record_id)
+            const isSelected = center.properties.record_id === selectedDiveCenter?.properties.record_id
 
             return marker(latlng, {
-              icon: selectedDiveSite
+              icon: isSelected
+                ? MAP_ICONS.diveCenterSelected
+                : selectedDiveSite
                 ? isNearby
                   ? MAP_ICONS.diveCentersNearby
                   : MAP_ICONS.diveCentersMuted
@@ -334,7 +348,10 @@ export function DiveMap({
             })
           }}
           onEachFeature={(feature, layer: Layer) => {
-            const properties = (feature as DiveCenterFeature).properties
+            const center = feature as DiveCenterFeature
+            const properties = center.properties
+
+            layer.on('click', () => onSelectDiveCenter(center))
 
             layer.bindPopup(`
               <article class="site-popup">

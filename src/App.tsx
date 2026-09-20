@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { DiverProfile } from './components/Certification/DiverProfile'
 import { LanguageSwitcher } from './components/LanguageSwitcher/LanguageSwitcher'
 import { DiveMap } from './components/Map/DiveMap'
+import { DiveCenterDetails } from './components/Details/DiveCenterDetails'
+import { DiveSiteDetails } from './components/Details/DiveSiteDetails'
 import { PlanningPanel } from './components/Planning/PlanningPanel'
-import { NearbyDiveCenters } from './components/Planning/NearbyDiveCenters'
 import { ResultsSummary } from './components/Planning/ResultsSummary'
 import { ProjectSidebar } from './components/Sidebar/ProjectSidebar'
 import { SidebarSection } from './components/Sidebar/SidebarSection'
@@ -19,6 +20,7 @@ import type {
   DiveSiteAnalysis,
   DiveSiteFeature,
   DiveCenterCollection,
+  DiveCenterFeature,
   DiveSiteCollection,
 } from './types/gis'
 import {
@@ -26,6 +28,10 @@ import {
   type DiverProfile as DiverProfileValue,
 } from './utils/certification'
 import { calculateDistanceNm, findNearestPoints } from './utils/spatial'
+import {
+  getDiveCenterEnrichment,
+  getDiveSiteEnrichment,
+} from './utils/enrichment'
 
 export type MapLayerKey = 'diveSites' | 'diveCenters' | 'departurePoints'
 export type LayerState<T> = Record<MapLayerKey, T>
@@ -89,6 +95,8 @@ function App() {
   )
   const [selectedDiveSite, setSelectedDiveSite] =
     useState<DiveSiteFeature | null>(null)
+  const [selectedDiveCenter, setSelectedDiveCenter] =
+    useState<DiveCenterFeature | null>(null)
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false)
 
   const retry = useCallback(() => {
@@ -225,6 +233,12 @@ function App() {
       ),
     [nearbyDiveCenters],
   )
+  const selectedSiteEnrichment = selectedDiveSite
+    ? getDiveSiteEnrichment(selectedDiveSite.properties.site_name)
+    : null
+  const selectedCenterEnrichment = selectedDiveCenter
+    ? getDiveCenterEnrichment(selectedDiveCenter.properties.record_id)
+    : null
   const selectedDiveSiteDistanceNm = selectedDiveSite
     ? (siteAnalysis.get(selectedDiveSite)?.distanceNm ?? null)
     : null
@@ -240,6 +254,18 @@ function App() {
     maximumDistanceNm,
     boatSpeedKnots,
   ].join('-')
+
+  const selectDiveSite = useCallback((site: DiveSiteFeature) => {
+    setSelectedDiveSite(site)
+    setSelectedDiveCenter(null)
+    setIsMobilePanelOpen(true)
+  }, [])
+
+  const selectDiveCenter = useCallback((center: DiveCenterFeature) => {
+    setSelectedDiveCenter(center)
+    setSelectedDiveSite(null)
+    setIsMobilePanelOpen(true)
+  }, [])
 
   return (
     <div className="app-shell">
@@ -351,9 +377,20 @@ function App() {
             </SidebarSection>
 
             {selectedDiveSite && (
-              <NearbyDiveCenters
-                selectedDiveSiteName={selectedDiveSite.properties.site_name}
-                centers={nearbyDiveCenters}
+              <DiveSiteDetails
+                site={selectedDiveSite}
+                enrichment={selectedSiteEnrichment}
+                selectedDeparture={selectedDeparture}
+                directDistanceNm={selectedDiveSiteDistanceNm}
+                boatSpeedKnots={boatSpeedKnots}
+                nearbyCenters={nearbyDiveCenters}
+              />
+            )}
+
+            {selectedDiveCenter && (
+              <DiveCenterDetails
+                center={selectedDiveCenter}
+                enrichment={selectedCenterEnrichment}
               />
             )}
 
@@ -406,11 +443,13 @@ function App() {
             analysisKey={filterKey}
             selectedDeparture={selectedDeparture}
             selectedDiveSite={selectedDiveSite}
+            selectedDiveCenter={selectedDiveCenter}
             nearbyDiveCenterIds={nearbyDiveCenterIds}
             maximumDistanceNm={maximumDistanceNm}
             boatSpeedKnots={boatSpeedKnots}
             onSelectDeparture={setSelectedDepartureId}
-            onSelectDiveSite={setSelectedDiveSite}
+            onSelectDiveSite={selectDiveSite}
+            onSelectDiveCenter={selectDiveCenter}
           />
           {isAnythingLoading && (
             <div className="map-message">{t.status.loadingMapLayers}</div>

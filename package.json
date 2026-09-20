@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "test:certification": "node --experimental-strip-types scripts/verify-certification.mts",
     "test:enrichment": "node --experimental-strip-types scripts/verify-enrichment.mts",
+    "test:rich-details": "node --experimental-strip-types scripts/verify-rich-details.mts",
     "test:spatial": "node --experimental-strip-types scripts/verify-spatial.mts",
     "preview": "vite preview"
   },

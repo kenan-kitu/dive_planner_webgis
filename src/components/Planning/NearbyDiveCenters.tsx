@@ -5,6 +5,7 @@ import type { DistanceResult } from '../../utils/spatial'
 interface NearbyDiveCentersProps {
   selectedDiveSiteName: string
   centers: readonly DistanceResult<DiveCenterFeature>[]
+  compact?: boolean
 }
 
 function safeWebsiteUrl(value: string | null): string | null {
@@ -27,11 +28,12 @@ function phoneUrl(value: string): string {
 export function NearbyDiveCenters({
   selectedDiveSiteName,
   centers,
+  compact = false,
 }: NearbyDiveCentersProps) {
   const { t } = useLanguage()
 
   return (
-    <section className="nearby-centers" aria-labelledby="nearby-centers-title">
+    <section className={`nearby-centers${compact ? ' nearby-centers--compact' : ''}`} aria-labelledby="nearby-centers-title">
       <header>
         <div>
           <p className="eyebrow">{t.planning.selectedDiveSite}</p>
