@@ -31,6 +31,8 @@ interface DiveMapProps {
   selectedDiveSite: DiveSiteFeature | null
   selectedDiveCenter: DiveCenterFeature | null
   nearbyDiveCenterIds: ReadonlySet<number>
+  resultSiteNames: ReadonlySet<string>
+  resultCenterIds: ReadonlySet<number>
   maximumDistanceNm: number
   boatSpeedKnots: number
   onSelectDeparture: (recordId: number) => void
@@ -204,6 +206,8 @@ export function DiveMap({
   selectedDiveSite,
   selectedDiveCenter,
   nearbyDiveCenterIds,
+  resultSiteNames,
+  resultCenterIds,
   maximumDistanceNm,
   boatSpeedKnots,
   onSelectDeparture,
@@ -329,17 +333,20 @@ export function DiveMap({
 
       {visibility.diveCenters && diveCenters && (
         <GeoJSON
-          key={`dive-centers-${language}-${selectedDiveSite?.properties.site_name ?? 'none'}-${selectedDiveCenter?.properties.record_id ?? 'none'}-${Array.from(nearbyDiveCenterIds).join('-')}`}
+          key={`dive-centers-${language}-${selectedDiveSite?.properties.site_name ?? 'none'}-${selectedDiveCenter?.properties.record_id ?? 'none'}-${Array.from(nearbyDiveCenterIds).join('-')}-${Array.from(resultCenterIds).join('-')}`}
           data={diveCenters}
           pointToLayer={(feature, latlng) => {
             const center = feature as DiveCenterFeature
             const isNearby = nearbyDiveCenterIds.has(center.properties.record_id)
             const isSelected = center.properties.record_id === selectedDiveCenter?.properties.record_id
+            const isCatalogResult = resultCenterIds.has(center.properties.record_id)
 
             return marker(latlng, {
               icon: isSelected
                 ? MAP_ICONS.diveCenterSelected
-                : selectedDiveSite
+                : !isCatalogResult
+                  ? MAP_ICONS.diveCentersMuted
+                  : selectedDiveSite
                 ? isNearby
                   ? MAP_ICONS.diveCentersNearby
                   : MAP_ICONS.diveCentersMuted
@@ -382,7 +389,7 @@ export function DiveMap({
             return marker(latlng, {
               icon: isSelected
                 ? MAP_ICONS.diveSiteSelected
-                : result?.isFullMatch !== false
+                : resultSiteNames.has(properties.site_name)
                   ? MAP_ICONS.diveSites
                   : MAP_ICONS.diveSitesMuted,
               title: properties.site_name,

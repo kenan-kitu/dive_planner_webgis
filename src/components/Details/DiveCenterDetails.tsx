@@ -1,12 +1,15 @@
 import type { DiveCenterEnrichment } from '../../data/enrichment/types.ts'
 import { useLanguage } from '../../i18n/LanguageContext'
-import type { DiveCenterFeature } from '../../types/gis'
+import type { DiveCenterFeature, DiveSiteFeature } from '../../types/gis'
+import type { DistanceResult } from '../../utils/spatial'
 import { DetailList, DetailSources, DetailText } from './DetailParts'
 import { PhotoGallery } from './PhotoGallery'
 
 interface DiveCenterDetailsProps {
   center: DiveCenterFeature
   enrichment: DiveCenterEnrichment | null
+  nearbySites: readonly DistanceResult<DiveSiteFeature>[]
+  onSelectSite: (site: DiveSiteFeature) => void
 }
 
 function safeWebsite(value: string | null | undefined): string | null {
@@ -23,7 +26,12 @@ function phoneHref(value: string): string {
   return `tel:${value.replace(/[^\d+]/g, '')}`
 }
 
-export function DiveCenterDetails({ center, enrichment }: DiveCenterDetailsProps) {
+export function DiveCenterDetails({
+  center,
+  enrichment,
+  nearbySites,
+  onSelectSite,
+}: DiveCenterDetailsProps) {
   const { t } = useLanguage()
   const properties = center.properties
   const name = enrichment?.officialName ?? properties.name
@@ -54,6 +62,27 @@ export function DiveCenterDetails({ center, enrichment }: DiveCenterDetailsProps
       <DetailList title={t.details.courses} items={enrichment?.courses ?? []} />
       <DetailList title={t.details.rentals} items={enrichment?.rentals ?? []} />
       <DetailList title={t.details.boatTrips} items={enrichment?.boatTrips ?? []} />
+      <section className="detail-section nearby-sites">
+        <h3>{t.catalog.nearbyDiveSites}</h3>
+        <p>{t.catalog.proximityOnly}</p>
+        {nearbySites.length ? (
+          <ol>
+            {nearbySites.map(({ feature, distanceNm }) => (
+              <li key={feature.properties.site_name}>
+                <div>
+                  <strong>{feature.properties.site_name}</strong>
+                  <span>{distanceNm.toFixed(1)} NM</span>
+                </div>
+                <button type="button" onClick={() => onSelectSite(feature)}>
+                  {t.catalog.viewDetails}
+                </button>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p>{t.catalog.noDiveSites}</p>
+        )}
+      </section>
       {enrichment && <DetailSources sources={enrichment.sources} />}
     </article>
   )

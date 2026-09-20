@@ -14,6 +14,10 @@ interface DiveSiteDetailsProps {
   directDistanceNm: number | null
   boatSpeedKnots: number
   nearbyCenters: readonly DistanceResult<DiveCenterFeature>[]
+  nearbyDepartures: readonly DistanceResult<DeparturePointFeature>[]
+  certificationLabel: string | null
+  effectiveDepthLimit: number | null
+  onSelectCenter: (center: DiveCenterFeature) => void
 }
 
 function depthRange(site: DiveSiteFeature, enrichment: DiveSiteEnrichment | null): string | null {
@@ -36,12 +40,20 @@ export function DiveSiteDetails({
   directDistanceNm,
   boatSpeedKnots,
   nearbyCenters,
+  nearbyDepartures,
+  certificationLabel,
+  effectiveDepthLimit,
+  onSelectCenter,
 }: DiveSiteDetailsProps) {
   const { t } = useLanguage()
   const properties = site.properties
   const type = enrichment?.diveType ?? properties.site_type
   const depth = depthRange(site, enrichment)
   const hasTrip = selectedDeparture && directDistanceNm != null
+  const siteMaximumDepth = enrichment?.knownDepth?.maximumMeters ?? properties.max_depth_m
+  const matchesCertification =
+    effectiveDepthLimit == null ||
+    (siteMaximumDepth != null && siteMaximumDepth <= effectiveDepthLimit)
 
   return (
     <article className="rich-detail rich-detail--site" aria-labelledby="site-detail-title">
@@ -75,6 +87,31 @@ export function DiveSiteDetails({
       <DetailText title={t.details.experience}>{enrichment?.experienceNotes}</DetailText>
       <DetailText title={t.details.history}>{enrichment?.history}</DetailText>
 
+      {certificationLabel && effectiveDepthLimit != null ? (
+        <section className="detail-section detail-suitability">
+          <h3>{t.catalog.suitabilityForYou}</h3>
+          <dl>
+            <div>
+              <dt>{t.planning.certification}</dt>
+              <dd>{certificationLabel}</dd>
+            </div>
+            <div>
+              <dt>{t.catalog.planningDepthLimit}</dt>
+              <dd>{effectiveDepthLimit} m</dd>
+            </div>
+            <div>
+              <dt>{t.details.depth}</dt>
+              <dd>{depth ?? t.popup.notAvailable}</dd>
+            </div>
+          </dl>
+          <strong className={matchesCertification ? 'is-match' : 'is-warning'}>
+            {matchesCertification
+              ? t.catalog.withinDepth
+              : t.catalog.exceedsDepth}
+          </strong>
+        </section>
+      ) : null}
+
       {hasTrip && (
         <section className="detail-section detail-trip">
           <h3>{t.details.tripPlanning}</h3>
@@ -88,7 +125,44 @@ export function DiveSiteDetails({
         </section>
       )}
 
-      <NearbyDiveCenters selectedDiveSiteName={properties.site_name} centers={nearbyCenters} compact />
+      <NearbyDiveCenters
+        selectedDiveSiteName={properties.site_name}
+        centers={nearbyCenters}
+        compact
+        onSelectCenter={onSelectCenter}
+      />
+
+      <section className="detail-section nearby-departures">
+        <h3>{t.catalog.nearbyDepartures}</h3>
+        {nearbyDepartures.length ? (
+          <ol>
+            {nearbyDepartures.map(({ feature, distanceNm }) => (
+              <li key={feature.properties.record_id}>
+                <div>
+                  <strong>{feature.properties.name}</strong>
+                  <span>{feature.properties.type ?? t.dataValues.departurePoint}</span>
+                </div>
+                <dl>
+                  <div>
+                    <dt>{t.planning.directBoatDistance}</dt>
+                    <dd>{distanceNm.toFixed(1)} NM</dd>
+                  </div>
+                  <div>
+                    <dt>{t.planning.estimatedTravelTime}</dt>
+                    <dd>
+                      ~{calculateTravelTimeMinutes(distanceNm, boatSpeedKnots)}{' '}
+                      {t.planning.minutes}
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p>{t.catalog.noDepartureOptions}</p>
+        )}
+        <small>{t.catalog.departureDisclaimer}</small>
+      </section>
       {enrichment && <DetailSources sources={enrichment.sources} />}
     </article>
   )

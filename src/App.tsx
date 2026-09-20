@@ -4,12 +4,24 @@ import { LanguageSwitcher } from './components/LanguageSwitcher/LanguageSwitcher
 import { DiveMap } from './components/Map/DiveMap'
 import { DiveCenterDetails } from './components/Details/DiveCenterDetails'
 import { DiveSiteDetails } from './components/Details/DiveSiteDetails'
+import { DiveSiteCatalog } from './components/Catalog/DiveSiteCatalog'
+import {
+  DiveCenterCatalog,
+  type CenterCatalogItem,
+} from './components/Catalog/DiveCenterCatalog'
 import {
   GoalHeader,
-  GoalSelector,
   OpeningExperience,
   type UserGoal,
 } from './components/Goals/GoalExperience'
+import {
+  BoatTripQuestions,
+  CenterJourneyChoice,
+  SiteMatchQuestions,
+  stableSiteOrder,
+  type CenterJourney,
+  type TravelPreference,
+} from './components/Goals/GoalQuestions'
 import { PlanningPanel } from './components/Planning/PlanningPanel'
 import { ResultsSummary } from './components/Planning/ResultsSummary'
 import { ProjectSidebar } from './components/Sidebar/ProjectSidebar'
@@ -123,6 +135,13 @@ function App() {
     userGoal === null,
   )
   const [showFullControls, setShowFullControls] = useState(false)
+  const [travelPreference, setTravelPreference] =
+    useState<TravelPreference>('none')
+  const [centerJourney, setCenterJourney] = useState<CenterJourney | null>(null)
+  const [siteCatalogSearch, setSiteCatalogSearch] = useState('')
+  const [siteCatalogType, setSiteCatalogType] = useState<string | null>(null)
+  const [centerCatalogSearch, setCenterCatalogSearch] = useState('')
+  const [catalogView, setCatalogView] = useState<'list' | 'map'>('list')
 
   const retry = useCallback(() => {
     setRequestVersion((version) => version + 1)
@@ -258,6 +277,20 @@ function App() {
       ),
     [nearbyDiveCenters],
   )
+  const nearbyDepartureOptions = useMemo(
+    () =>
+      selectedDiveSite && departurePoints
+        ? findNearestPoints(selectedDiveSite, departurePoints.features, 3)
+        : [],
+    [departurePoints, selectedDiveSite],
+  )
+  const nearbySitesForCenter = useMemo(
+    () =>
+      selectedDiveCenter && diveSites
+        ? findNearestPoints(selectedDiveCenter, diveSites.features, 5)
+        : [],
+    [diveSites, selectedDiveCenter],
+  )
   const selectedSiteEnrichment = selectedDiveSite
     ? getDiveSiteEnrichment(selectedDiveSite.properties.site_name)
     : null
@@ -272,23 +305,138 @@ function App() {
         selectedSiteType.toLowerCase() as 'reef' | 'wreck' | 'wall'
       ] ?? selectedSiteType)
     : t.planning.allDiveTypes
+  const findSiteResults = useMemo(() => {
+    const sites = (diveSites?.features ?? []).filter((site) => {
+      const result = siteAnalysis.get(site)
+      if (!result?.matchesDepth || !result.matchesType) return false
+      if (travelPreference === 'none') return true
+      if (!selectedDeparture) return false
+      if (travelPreference === 'short') {
+        return result.distanceNm != null && result.distanceNm <= 5
+      }
+      return result.matchesDistance
+    })
+
+    return [...sites].sort((first, second) => {
+      if (selectedDeparture) {
+        return (
+          (siteAnalysis.get(first)?.distanceNm ?? Number.POSITIVE_INFINITY) -
+          (siteAnalysis.get(second)?.distanceNm ?? Number.POSITIVE_INFINITY)
+        )
+      }
+      return first.properties.site_name.localeCompare(second.properties.site_name)
+    })
+  }, [
+    diveSites,
+    selectedDeparture,
+    siteAnalysis,
+    travelPreference,
+  ])
+  const exploredSites = useMemo(() => {
+    const normalizedSearch = siteCatalogSearch.trim().toLocaleLowerCase()
+    return stableSiteOrder(diveSites?.features ?? []).filter((site) => {
+      const type = site.properties.site_type?.toLocaleLowerCase()
+      const matchesSearch =
+        !normalizedSearch ||
+        site.properties.site_name.toLocaleLowerCase().includes(normalizedSearch)
+      const matchesType = !siteCatalogType || type === siteCatalogType
+      return matchesSearch && matchesType
+    })
+  }, [diveSites, siteCatalogSearch, siteCatalogType])
+  const reachableSites = useMemo(() => {
+    if (!selectedDeparture) return []
+    return [...(diveSites?.features ?? [])]
+      .filter((site) => siteAnalysis.get(site)?.matchesDistance)
+      .sort(
+        (first, second) =>
+          (siteAnalysis.get(first)?.distanceNm ?? Number.POSITIVE_INFINITY) -
+          (siteAnalysis.get(second)?.distanceNm ?? Number.POSITIVE_INFINITY),
+      )
+  }, [diveSites, selectedDeparture, siteAnalysis])
+  const nearbyCenterCatalog: CenterCatalogItem[] = useMemo(
+    () =>
+      nearbyDiveCenters.map(({ feature, distanceNm }) => ({
+        center: feature,
+        distanceNm,
+      })),
+    [nearbyDiveCenters],
+  )
+  const allCenterCatalog: CenterCatalogItem[] = useMemo(() => {
+    const normalizedSearch = centerCatalogSearch.trim().toLocaleLowerCase()
+    return [...(diveCenters?.features ?? [])]
+      .filter((center) =>
+        center.properties.name.toLocaleLowerCase().includes(normalizedSearch),
+      )
+      .sort((first, second) =>
+        first.properties.name.localeCompare(second.properties.name),
+      )
+      .map((center) => ({ center }))
+  }, [centerCatalogSearch, diveCenters])
+  const activeCatalogSites = useMemo(() => {
+    if (showFullControls) {
+      return (diveSites?.features ?? []).filter(
+        (site) => siteAnalysis.get(site)?.isFullMatch,
+      )
+    }
+    if (userGoal === 'findSites') return findSiteResults
+    if (userGoal === 'exploreSite') return exploredSites
+    if (userGoal === 'boatTrip') return reachableSites
+    if (userGoal === 'findCenter' && centerJourney === 'site') {
+      return exploredSites
+    }
+    return diveSites?.features ?? []
+  }, [
+    centerJourney,
+    diveSites,
+    exploredSites,
+    findSiteResults,
+    reachableSites,
+    showFullControls,
+    siteAnalysis,
+    userGoal,
+  ])
+  const activeCatalogSiteNames = useMemo(
+    () => new Set(activeCatalogSites.map((site) => site.properties.site_name)),
+    [activeCatalogSites],
+  )
+  const activeCatalogCenterIds = useMemo(() => {
+    if (userGoal !== 'findCenter' || showFullControls) {
+      return new Set((diveCenters?.features ?? []).map((center) => center.properties.record_id))
+    }
+    const items = centerJourney === 'site' ? nearbyCenterCatalog : allCenterCatalog
+    return new Set(items.map(({ center }) => center.properties.record_id))
+  }, [
+    allCenterCatalog,
+    centerJourney,
+    diveCenters,
+    nearbyCenterCatalog,
+    showFullControls,
+    userGoal,
+  ])
+  const activeCatalogKey = useMemo(
+    () => activeCatalogSites.map((site) => site.properties.site_name).join('|'),
+    [activeCatalogSites],
+  )
   const filterKey = [
     effectiveDepthLimit ?? 'none',
     selectedSiteType ?? 'all',
     selectedDepartureId ?? 'none',
     maximumDistanceNm,
     boatSpeedKnots,
+    activeCatalogKey,
+    userGoal ?? 'none',
   ].join('-')
 
   const selectDiveSite = useCallback((site: DiveSiteFeature) => {
     setSelectedDiveSite(site)
     setSelectedDiveCenter(null)
+    setCatalogView('list')
     setIsMobilePanelOpen(true)
   }, [])
 
   const selectDiveCenter = useCallback((center: DiveCenterFeature) => {
     setSelectedDiveCenter(center)
-    setSelectedDiveSite(null)
+    setCatalogView('list')
     setIsMobilePanelOpen(true)
   }, [])
 
@@ -296,6 +444,9 @@ function App() {
     window.sessionStorage.setItem(SESSION_GOAL_KEY, goal)
     setUserGoal(goal)
     setShowFullControls(false)
+    setSelectedDiveSite(null)
+    setSelectedDiveCenter(null)
+    setCatalogView('list')
     setIsOpeningExperienceOpen(false)
     setIsMobilePanelOpen(true)
   }, [])
@@ -315,23 +466,37 @@ function App() {
     setIsMobilePanelOpen(true)
   }, [])
 
+  const selectTravelPreference = useCallback((preference: TravelPreference) => {
+    setTravelPreference(preference)
+    if (preference === 'none') setSelectedDepartureId(null)
+    if (preference === 'short') setMaximumDistanceNm(5)
+  }, [])
+
+  const selectCenterJourney = useCallback((journey: CenterJourney) => {
+    setCenterJourney(journey)
+    setSelectedDiveSite(null)
+    setSelectedDiveCenter(null)
+    setSiteCatalogSearch('')
+    setCenterCatalogSearch('')
+  }, [])
+
+  const clearDetail = useCallback(() => {
+    setSelectedDiveSite(null)
+    setSelectedDiveCenter(null)
+  }, [])
+
+  const showCatalogMap = useCallback(() => {
+    setCatalogView('map')
+    setIsMobilePanelOpen(false)
+  }, [])
+
+  const showCatalogList = useCallback(() => {
+    setCatalogView('list')
+    setIsMobilePanelOpen(true)
+  }, [])
+
   const isFullPlanningView = showFullControls || userGoal === null
-  const showCertification =
-    isFullPlanningView ||
-    userGoal === 'findSites' ||
-    (userGoal === 'exploreSite' && selectedDiveSite !== null)
-  const showPlanning =
-    isFullPlanningView ||
-    userGoal === 'findSites' ||
-    userGoal === 'boatTrip' ||
-    (userGoal === 'exploreSite' && selectedDiveSite !== null)
-  const showResults =
-    isFullPlanningView || userGoal === 'findSites' || userGoal === 'boatTrip'
-  const showPlanningSummary =
-    isFullPlanningView ||
-    userGoal === 'findSites' ||
-    userGoal === 'boatTrip' ||
-    userGoal === 'exploreSite'
+  const certificationLabel = `${diverProfile.agency} ${selectedCertification?.name ?? ''}`.trim()
 
   return (
     <div className="app-shell">
@@ -390,20 +555,34 @@ function App() {
               />
             ) : null}
 
-            {!isFullPlanningView &&
-            (userGoal === 'exploreSite' || userGoal === 'findCenter') ? (
-              <GoalSelector
-                goal={userGoal}
-                diveSites={diveSites}
-                diveCenters={diveCenters}
-                selectedDiveSite={selectedDiveSite}
-                selectedDiveCenter={selectedDiveCenter}
-                onSelectDiveSite={selectDiveSite}
-                onSelectDiveCenter={selectDiveCenter}
-              />
+            {!isFullPlanningView && userGoal ? (
+              <div className="catalog-view-toggle" role="group" aria-label={t.catalog.viewMode}>
+                <button
+                  type="button"
+                  className={catalogView === 'list' ? 'is-active' : ''}
+                  aria-pressed={catalogView === 'list'}
+                  onClick={showCatalogList}
+                >
+                  {t.catalog.list}
+                </button>
+                <button
+                  type="button"
+                  className={catalogView === 'map' ? 'is-active' : ''}
+                  aria-pressed={catalogView === 'map'}
+                  onClick={showCatalogMap}
+                >
+                  {t.catalog.map}
+                </button>
+              </div>
             ) : null}
 
-            {showPlanningSummary ? (
+            {(selectedDiveSite || selectedDiveCenter) && !isFullPlanningView ? (
+              <button className="journey-back" type="button" onClick={clearDetail}>
+                ← {t.catalog.backToResults}
+              </button>
+            ) : null}
+
+            {isFullPlanningView ? (
               <dl className="mobile-selection-summary">
               <div>
                 <dt>{t.planning.certification}</dt>
@@ -433,11 +612,11 @@ function App() {
               </dl>
             ) : null}
 
-            {showCertification ? (
+            {isFullPlanningView ? (
               <SidebarSection
                 title={t.planning.certification}
                 summary={`${diverProfile.agency} · ${selectedCertification?.name ?? ''}`}
-                initiallyOpen={userGoal === 'findSites'}
+                initiallyOpen
               >
                 <DiverProfile
                   profile={diverProfile}
@@ -449,11 +628,11 @@ function App() {
               </SidebarSection>
             ) : null}
 
-            {showPlanning ? (
+            {isFullPlanningView ? (
               <SidebarSection
                 title={t.planning.divePlanning}
                 summary={`${selectedSiteTypeLabel} · ${selectedDeparture?.properties.name ?? t.planning.noDepartureSelected} · ${maximumDistanceNm} NM · ${boatSpeedKnots} ${t.planning.knotAbbreviation}`}
-                initiallyOpen={userGoal === 'boatTrip' || isFullPlanningView}
+                initiallyOpen
               >
                 <PlanningPanel
                   departurePoints={departurePoints}
@@ -471,12 +650,129 @@ function App() {
                   onSiteTypeChange={setSelectedSiteType}
                   onMaximumDistanceChange={setMaximumDistanceNm}
                   onBoatSpeedChange={setBoatSpeedKnots}
-                  showDiveType={userGoal !== 'boatTrip' || isFullPlanningView}
+                  showDiveType
                 />
               </SidebarSection>
             ) : null}
 
-            {selectedDiveSite && (
+            {!isFullPlanningView && userGoal === 'findSites' && !selectedDiveSite ? (
+              <>
+                <SiteMatchQuestions
+                  profile={diverProfile}
+                  effectiveDepthLimit={effectiveDepthLimit}
+                  matchingSiteCount={findSiteResults.length}
+                  totalSiteCount={totalSiteCount}
+                  selectedSiteType={selectedSiteType}
+                  travelPreference={travelPreference}
+                  departurePoints={departurePoints}
+                  selectedDepartureId={selectedDepartureId}
+                  maximumDistanceNm={maximumDistanceNm}
+                  onProfileChange={setDiverProfile}
+                  onSiteTypeChange={setSelectedSiteType}
+                  onTravelPreferenceChange={selectTravelPreference}
+                  onDepartureChange={setSelectedDepartureId}
+                  onMaximumDistanceChange={setMaximumDistanceNm}
+                />
+                <DiveSiteCatalog
+                  sites={findSiteResults}
+                  analysis={siteAnalysis}
+                  selectedSite={selectedDiveSite}
+                  boatSpeedKnots={boatSpeedKnots}
+                  heading={t.catalog.sitesFound.replace('{count}', String(findSiteResults.length))}
+                  onSelect={selectDiveSite}
+                />
+              </>
+            ) : null}
+
+            {!isFullPlanningView && userGoal === 'exploreSite' && !selectedDiveSite ? (
+              <DiveSiteCatalog
+                sites={exploredSites}
+                analysis={siteAnalysis}
+                selectedSite={selectedDiveSite}
+                boatSpeedKnots={boatSpeedKnots}
+                heading={t.catalog.exploreDiveSites}
+                search={siteCatalogSearch}
+                typeFilter={siteCatalogType}
+                onSearchChange={setSiteCatalogSearch}
+                onTypeFilterChange={setSiteCatalogType}
+                onSelect={selectDiveSite}
+              />
+            ) : null}
+
+            {!isFullPlanningView && userGoal === 'boatTrip' && !selectedDiveSite ? (
+              <>
+                <BoatTripQuestions
+                  departurePoints={departurePoints}
+                  selectedDepartureId={selectedDepartureId}
+                  boatSpeedKnots={boatSpeedKnots}
+                  maximumDistanceNm={maximumDistanceNm}
+                  onDepartureChange={setSelectedDepartureId}
+                  onBoatSpeedChange={setBoatSpeedKnots}
+                  onMaximumDistanceChange={setMaximumDistanceNm}
+                />
+                {selectedDeparture ? (
+                  <DiveSiteCatalog
+                    sites={reachableSites}
+                    analysis={siteAnalysis}
+                    selectedSite={selectedDiveSite}
+                    boatSpeedKnots={boatSpeedKnots}
+                    heading={t.catalog.reachableDiveSites}
+                    onSelect={selectDiveSite}
+                  />
+                ) : (
+                  <div className="catalog-empty">
+                    <strong>{t.catalog.selectDepartureFirst}</strong>
+                    <span>{t.catalog.selectDepartureHelp}</span>
+                  </div>
+                )}
+              </>
+            ) : null}
+
+            {!isFullPlanningView && userGoal === 'findCenter' ? (
+              <>
+                <CenterJourneyChoice
+                  value={centerJourney}
+                  onChange={selectCenterJourney}
+                />
+                {centerJourney === 'site' && !selectedDiveSite ? (
+                  <DiveSiteCatalog
+                    sites={exploredSites}
+                    analysis={siteAnalysis}
+                    selectedSite={selectedDiveSite}
+                    boatSpeedKnots={boatSpeedKnots}
+                    heading={t.catalog.chooseSiteForCenters}
+                    search={siteCatalogSearch}
+                    typeFilter={siteCatalogType}
+                    onSearchChange={setSiteCatalogSearch}
+                    onTypeFilterChange={setSiteCatalogType}
+                    onSelect={selectDiveSite}
+                  />
+                ) : null}
+                {centerJourney === 'site' && selectedDiveSite && !selectedDiveCenter ? (
+                  <DiveCenterCatalog
+                    items={nearbyCenterCatalog}
+                    selectedCenter={selectedDiveCenter}
+                    heading={t.catalog.nearbyDiveCentersFor.replace(
+                      '{site}',
+                      selectedDiveSite.properties.site_name,
+                    )}
+                    onSelect={selectDiveCenter}
+                  />
+                ) : null}
+                {centerJourney === 'browse' && !selectedDiveCenter ? (
+                  <DiveCenterCatalog
+                    items={allCenterCatalog}
+                    selectedCenter={selectedDiveCenter}
+                    heading={t.catalog.browseAllCenters}
+                    search={centerCatalogSearch}
+                    onSearchChange={setCenterCatalogSearch}
+                    onSelect={selectDiveCenter}
+                  />
+                ) : null}
+              </>
+            ) : null}
+
+            {selectedDiveSite && userGoal !== 'findCenter' && !selectedDiveCenter ? (
               <DiveSiteDetails
                 site={selectedDiveSite}
                 enrichment={selectedSiteEnrichment}
@@ -484,17 +780,23 @@ function App() {
                 directDistanceNm={selectedDiveSiteDistanceNm}
                 boatSpeedKnots={boatSpeedKnots}
                 nearbyCenters={nearbyDiveCenters}
+                nearbyDepartures={nearbyDepartureOptions}
+                certificationLabel={certificationLabel}
+                effectiveDepthLimit={effectiveDepthLimit}
+                onSelectCenter={selectDiveCenter}
               />
-            )}
+            ) : null}
 
-            {selectedDiveCenter && (
+            {selectedDiveCenter ? (
               <DiveCenterDetails
                 center={selectedDiveCenter}
                 enrichment={selectedCenterEnrichment}
+                nearbySites={nearbySitesForCenter}
+                onSelectSite={selectDiveSite}
               />
-            )}
+            ) : null}
 
-            {showResults ? (
+            {isFullPlanningView ? (
               <ResultsSummary
                 totalSiteCount={totalSiteCount}
                 matchingSiteCount={resultCounts.matching}
@@ -508,7 +810,8 @@ function App() {
               />
             ) : null}
 
-            <SidebarSection
+            {isFullPlanningView ? (
+              <SidebarSection
               title={t.planning.mapLayers}
               summary={`${diveSites?.features.length ?? 0} · ${diveCenters?.features.length ?? 0} · ${departurePoints?.features.length ?? 0}`}
             >
@@ -524,7 +827,8 @@ function App() {
                 onToggleLayer={toggleLayer}
                 onRetry={retry}
               />
-            </SidebarSection>
+              </SidebarSection>
+            ) : null}
           </div>
         </aside>
         {isMobilePanelOpen && (
@@ -547,6 +851,8 @@ function App() {
             selectedDiveSite={selectedDiveSite}
             selectedDiveCenter={selectedDiveCenter}
             nearbyDiveCenterIds={nearbyDiveCenterIds}
+            resultSiteNames={activeCatalogSiteNames}
+            resultCenterIds={activeCatalogCenterIds}
             maximumDistanceNm={maximumDistanceNm}
             boatSpeedKnots={boatSpeedKnots}
             onSelectDeparture={setSelectedDepartureId}
@@ -568,10 +874,10 @@ function App() {
           type="button"
           aria-controls="planning-panel"
           aria-expanded={isMobilePanelOpen}
-          onClick={() => setIsMobilePanelOpen(true)}
+          onClick={showCatalogList}
         >
-          <span>{t.planning.openFilters}</span>
-          <strong>{resultCounts.matching}</strong>
+          <span>{userGoal && !isFullPlanningView ? t.catalog.list : t.planning.openFilters}</span>
+          <strong>{activeCatalogSites.length}</strong>
         </button>
       </main>
 
