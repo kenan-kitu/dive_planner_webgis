@@ -8,12 +8,10 @@ RUN sed -i '0,/port="8080"/s//address="0.0.0.0" port="${PORT}"/' /opt/config/ser
     && grep -Fq 'address="0.0.0.0" port="${PORT}"' /opt/config/server.xml
 
 ENV CORS_ENABLED=true \
-    CORS_ALLOWED_ORIGINS=https://dive-planner-webgis.netlify.app \
+    CORS_ALLOWED_ORIGINS=https://dive-planner-webgis.netlify.app,https://diveplanner-geoserver.onrender.com \
     CORS_ALLOWED_METHODS=GET,POST,HEAD,OPTIONS \
     CORS_ALLOWED_HEADERS=Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers \
-    CORS_ALLOW_CREDENTIALS=false \
-    GEOSERVER_CSRF_WHITELIST=diveplanner-geoserver.onrender.com \
-    EXTRA_JAVA_OPTS=-DGEOSERVER_CSRF_WHITELIST=diveplanner-geoserver.onrender.com
+    CORS_ALLOW_CREDENTIALS=false
 
 COPY data/dive_planner_data.gpkg /opt/geoserver_data/dive_planner_data.gpkg
 COPY diveplanner /opt/geoserver_data/workspaces/diveplanner
