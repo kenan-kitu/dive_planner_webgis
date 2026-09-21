@@ -427,11 +427,8 @@ export function DiveMap({
           pointToLayer={(feature, latlng) => {
             const site = feature as DiveSiteFeature
             const properties = site.properties
-            const result = siteAnalysis.get(site)
             const isSelected = site === selectedDiveSite
-            const isMatching =
-              resultSiteNames.has(properties.site_name) &&
-              Boolean(result?.isFullMatch)
+            const isMatching = resultSiteNames.has(properties.site_name)
 
             return marker(latlng, {
               icon: createMapIcon(
