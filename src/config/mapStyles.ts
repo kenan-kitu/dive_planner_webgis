@@ -39,8 +39,8 @@ export const NAUTICAL_OVERLAY = {
 
 export const MAP_ANALYSIS_STYLES = {
   reachZone: {
-    color: '#087c8c',
-    fillColor: '#32aab4',
+    color: '#6d28d9',
+    fillColor: '#a855f7',
   },
   directRoute: {
     color: '#f07832',

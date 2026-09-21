@@ -1,10 +1,9 @@
 import type { DiveSiteEnrichment } from '../../data/enrichment/types.ts'
 import { useLanguage } from '../../i18n/LanguageContext'
-import type { DeparturePointFeature, DiveCenterFeature, DiveSiteFeature } from '../../types/gis'
+import type { DeparturePointFeature, DiveSiteFeature } from '../../types/gis'
 import type { DistanceResult } from '../../utils/spatial'
 import { calculateTravelTimeMinutes } from '../../utils/spatial'
 import { localizeDiveSiteEnrichment } from '../../utils/enrichment'
-import { NearbyDiveCenters } from '../Planning/NearbyDiveCenters'
 import { DetailList, DetailSources, DetailText } from './DetailParts'
 import { PhotoGallery } from './PhotoGallery'
 
@@ -14,24 +13,20 @@ interface DiveSiteDetailsProps {
   selectedDeparture: DeparturePointFeature | null
   directDistanceNm: number | null
   boatSpeedKnots: number
-  nearbyCenters: readonly DistanceResult<DiveCenterFeature>[]
   nearbyDepartures: readonly DistanceResult<DeparturePointFeature>[]
   certificationLabel: string | null
   effectiveDepthLimit: number | null
-  onSelectCenter: (center: DiveCenterFeature) => void
+  onFindDiveCenters: () => void
 }
 
-function depthRange(site: DiveSiteFeature, enrichment: DiveSiteEnrichment | null): string | null {
+function depthValues(site: DiveSiteFeature, enrichment: DiveSiteEnrichment | null) {
   const minimum = enrichment?.knownDepth
     ? enrichment.knownDepth.minimumMeters
     : site.properties.min_depth_m
   const maximum = enrichment?.knownDepth
     ? enrichment.knownDepth.maximumMeters
     : site.properties.max_depth_m
-  if (minimum == null && maximum == null) return null
-  if (minimum == null) return `≤ ${maximum} m`
-  if (maximum == null) return `≥ ${minimum} m`
-  return `${minimum}–${maximum} m`
+  return { minimum, maximum }
 }
 
 function departureTypeLabel(
@@ -50,17 +45,16 @@ export function DiveSiteDetails({
   selectedDeparture,
   directDistanceNm,
   boatSpeedKnots,
-  nearbyCenters,
   nearbyDepartures,
   certificationLabel,
   effectiveDepthLimit,
-  onSelectCenter,
+  onFindDiveCenters,
 }: DiveSiteDetailsProps) {
   const { language, t } = useLanguage()
   const localizedEnrichment = localizeDiveSiteEnrichment(enrichment, language)
   const properties = site.properties
   const type = localizedEnrichment?.diveType ?? properties.site_type
-  const depth = depthRange(site, localizedEnrichment)
+  const depth = depthValues(site, localizedEnrichment)
   const hasTrip = selectedDeparture && directDistanceNm != null
   const siteMaximumDepth = localizedEnrichment?.knownDepth?.maximumMeters ?? properties.max_depth_m
   const matchesCertification =
@@ -81,7 +75,16 @@ export function DiveSiteDetails({
 
       <dl className="detail-facts">
         {type && <div><dt>{t.details.diveType}</dt><dd>{t.dataValues[type as keyof typeof t.dataValues] ?? type}</dd></div>}
-        {depth && <div><dt>{t.details.depth}</dt><dd>{depth}</dd></div>}
+        <div><dt>{t.details.minimumDepth}</dt><dd>{depth.minimum == null ? t.popup.notAvailable : `${depth.minimum} m`}</dd></div>
+        <div><dt>{t.details.maximumDepth}</dt><dd>{depth.maximum == null ? t.popup.notAvailable : `${depth.maximum} m`}</dd></div>
+        {certificationLabel && effectiveDepthLimit != null ? (
+          <div>
+            <dt>{t.catalog.certificationMatch}</dt>
+            <dd className={matchesCertification ? 'is-match' : 'is-warning'}>
+              {matchesCertification ? t.catalog.withinDepth : t.catalog.exceedsDepth}
+            </dd>
+          </div>
+        ) : null}
         {(properties.data_quality || localizedEnrichment) && (
           <div>
             <dt>{t.details.dataStatus}</dt>
@@ -111,16 +114,7 @@ export function DiveSiteDetails({
               <dt>{t.catalog.planningDepthLimit}</dt>
               <dd>{effectiveDepthLimit} m</dd>
             </div>
-            <div>
-              <dt>{t.details.depth}</dt>
-              <dd>{depth ?? t.popup.notAvailable}</dd>
-            </div>
           </dl>
-          <strong className={matchesCertification ? 'is-match' : 'is-warning'}>
-            {matchesCertification
-              ? t.catalog.withinDepth
-              : t.catalog.exceedsDepth}
-          </strong>
         </section>
       ) : null}
 
@@ -137,12 +131,13 @@ export function DiveSiteDetails({
         </section>
       )}
 
-      <NearbyDiveCenters
-        selectedDiveSiteName={properties.site_name}
-        centers={nearbyCenters}
-        compact
-        onSelectCenter={onSelectCenter}
-      />
+      <section className="detail-section detail-primary-action">
+        <h3>{t.planning.nearbyDiveCenters}</h3>
+        <p>{t.catalog.proximityOnly}</p>
+        <button type="button" onClick={onFindDiveCenters}>
+          {t.catalog.findDiveCenterForSite}
+        </button>
+      </section>
 
       <section className="detail-section nearby-departures">
         <h3>{t.catalog.nearbyDepartures}</h3>

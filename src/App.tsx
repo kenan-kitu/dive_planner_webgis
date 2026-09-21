@@ -142,6 +142,9 @@ function App() {
   const [siteCatalogType, setSiteCatalogType] = useState<string | null>(null)
   const [centerCatalogSearch, setCenterCatalogSearch] = useState('')
   const [catalogView, setCatalogView] = useState<'list' | 'map'>('list')
+  const [showOtherDiveSites, setShowOtherDiveSites] = useState(false)
+  const [isNearbyCenterJourneyOpen, setIsNearbyCenterJourneyOpen] =
+    useState(false)
   const [isDesktopLayout, setIsDesktopLayout] = useState(() =>
     window.matchMedia('(min-width: 1000px)').matches,
   )
@@ -410,6 +413,7 @@ function App() {
     [activeCatalogSites],
   )
   const activeCatalogCenterIds = useMemo(() => {
+    if (isNearbyCenterJourneyOpen) return nearbyDiveCenterIds
     if (userGoal !== 'findCenter' || showFullControls) {
       return new Set((diveCenters?.features ?? []).map((center) => center.properties.record_id))
     }
@@ -419,7 +423,9 @@ function App() {
     allCenterCatalog,
     centerJourney,
     diveCenters,
+    isNearbyCenterJourneyOpen,
     nearbyCenterCatalog,
+    nearbyDiveCenterIds,
     showFullControls,
     userGoal,
   ])
@@ -436,10 +442,35 @@ function App() {
     activeCatalogKey,
     userGoal ?? 'none',
   ].join('-')
+  const isFocusedSiteResultMode =
+    !showFullControls &&
+    (userGoal === 'findSites' ||
+      userGoal === 'exploreSite' ||
+      userGoal === 'boatTrip' ||
+      (userGoal === 'findCenter' && centerJourney === 'site'))
+  const canShowOtherDiveSites =
+    isFocusedSiteResultMode && activeCatalogSites.length < totalSiteCount
+
+  useEffect(() => {
+    setShowOtherDiveSites(false)
+  }, [activeCatalogKey, userGoal])
+
+  useEffect(() => {
+    if (
+      isFocusedSiteResultMode &&
+      selectedDiveSite &&
+      !activeCatalogSiteNames.has(selectedDiveSite.properties.site_name)
+    ) {
+      setSelectedDiveSite(null)
+      setSelectedDiveCenter(null)
+      setIsNearbyCenterJourneyOpen(false)
+    }
+  }, [activeCatalogSiteNames, isFocusedSiteResultMode, selectedDiveSite])
 
   const selectDiveSite = useCallback((site: DiveSiteFeature) => {
     setSelectedDiveSite(site)
     setSelectedDiveCenter(null)
+    setIsNearbyCenterJourneyOpen(false)
     setCatalogView('list')
     setIsMobilePanelOpen(true)
   }, [])
@@ -456,6 +487,7 @@ function App() {
     setShowFullControls(false)
     setSelectedDiveSite(null)
     setSelectedDiveCenter(null)
+    setIsNearbyCenterJourneyOpen(false)
     setCatalogView('list')
     setIsOpeningExperienceOpen(false)
     setIsMobilePanelOpen(true)
@@ -486,6 +518,7 @@ function App() {
     setCenterJourney(journey)
     setSelectedDiveSite(null)
     setSelectedDiveCenter(null)
+    setIsNearbyCenterJourneyOpen(false)
     setSiteCatalogSearch('')
     setCenterCatalogSearch('')
   }, [])
@@ -493,6 +526,51 @@ function App() {
   const clearDetail = useCallback(() => {
     setSelectedDiveSite(null)
     setSelectedDiveCenter(null)
+    setIsNearbyCenterJourneyOpen(false)
+  }, [])
+
+  const openNearbyCenterJourney = useCallback(() => {
+    setSelectedDiveCenter(null)
+    setIsNearbyCenterJourneyOpen(true)
+    setCatalogView('list')
+    setIsMobilePanelOpen(true)
+  }, [])
+
+  const backToDiveSiteDetail = useCallback(() => {
+    setSelectedDiveCenter(null)
+    setIsNearbyCenterJourneyOpen(false)
+  }, [])
+
+  const backToNearbyCenterCatalog = useCallback(() => {
+    setSelectedDiveCenter(null)
+  }, [])
+
+  const toggleDiveSiteFromMap = useCallback(
+    (site: DiveSiteFeature) => {
+      if (selectedDiveSite?.properties.site_name === site.properties.site_name) {
+        clearDetail()
+        return
+      }
+      selectDiveSite(site)
+    },
+    [clearDetail, selectDiveSite, selectedDiveSite],
+  )
+
+  const toggleDiveCenterFromMap = useCallback(
+    (center: DiveCenterFeature) => {
+      if (
+        selectedDiveCenter?.properties.record_id === center.properties.record_id
+      ) {
+        setSelectedDiveCenter(null)
+        return
+      }
+      selectDiveCenter(center)
+    },
+    [selectDiveCenter, selectedDiveCenter],
+  )
+
+  const toggleDepartureFromMap = useCallback((recordId: number) => {
+    setSelectedDepartureId((current) => (current === recordId ? null : recordId))
   }, [])
 
   const showCatalogMap = useCallback(() => {
@@ -507,6 +585,9 @@ function App() {
 
   const isFullPlanningView = showFullControls || userGoal === null
   const certificationLabel = `${diverProfile.agency} ${selectedCertification?.name ?? ''}`.trim()
+  const shouldBackToCenterCatalog =
+    selectedDiveCenter !== null &&
+    (isNearbyCenterJourneyOpen || userGoal === 'findCenter')
 
   return (
     <div className="app-shell">
@@ -593,8 +674,26 @@ function App() {
             ) : null}
 
             {(selectedDiveSite || selectedDiveCenter) && !isFullPlanningView ? (
-              <button className="journey-back" type="button" onClick={clearDetail}>
-                ← {t.catalog.backToResults}
+              <button
+                className="journey-back"
+                type="button"
+                onClick={
+                  isNearbyCenterJourneyOpen
+                    ? selectedDiveCenter
+                      ? backToNearbyCenterCatalog
+                      : backToDiveSiteDetail
+                    : shouldBackToCenterCatalog
+                      ? backToNearbyCenterCatalog
+                    : clearDetail
+                }
+              >
+                ← {isNearbyCenterJourneyOpen
+                  ? selectedDiveCenter
+                    ? t.catalog.backToDiveCenters
+                    : t.catalog.backToDiveSite
+                  : shouldBackToCenterCatalog
+                    ? t.catalog.backToDiveCenters
+                  : t.catalog.backToResults}
               </button>
             ) : null}
 
@@ -787,18 +886,29 @@ function App() {
               </>
             ) : null}
 
-            {!isDesktopLayout && selectedDiveSite && userGoal !== 'findCenter' && !selectedDiveCenter ? (
+            {!isDesktopLayout && isNearbyCenterJourneyOpen && selectedDiveSite && !selectedDiveCenter ? (
+              <DiveCenterCatalog
+                items={nearbyCenterCatalog}
+                selectedCenter={selectedDiveCenter}
+                heading={t.catalog.nearbyDiveCentersFor.replace(
+                  '{site}',
+                  selectedDiveSite.properties.site_name,
+                )}
+                onSelect={selectDiveCenter}
+              />
+            ) : null}
+
+            {!isDesktopLayout && selectedDiveSite && userGoal !== 'findCenter' && !selectedDiveCenter && !isNearbyCenterJourneyOpen ? (
               <DiveSiteDetails
                 site={selectedDiveSite}
                 enrichment={selectedSiteEnrichment}
                 selectedDeparture={selectedDeparture}
                 directDistanceNm={selectedDiveSiteDistanceNm}
                 boatSpeedKnots={boatSpeedKnots}
-                nearbyCenters={nearbyDiveCenters}
                 nearbyDepartures={nearbyDepartureOptions}
                 certificationLabel={certificationLabel}
                 effectiveDepthLimit={effectiveDepthLimit}
-                onSelectCenter={selectDiveCenter}
+                onFindDiveCenters={openNearbyCenterJourney}
               />
             ) : null}
 
@@ -870,9 +980,15 @@ function App() {
             resultCenterIds={activeCatalogCenterIds}
             maximumDistanceNm={maximumDistanceNm}
             boatSpeedKnots={boatSpeedKnots}
-            onSelectDeparture={setSelectedDepartureId}
-            onSelectDiveSite={selectDiveSite}
-            onSelectDiveCenter={selectDiveCenter}
+            resultDiveSites={activeCatalogSites}
+            resultKey={activeCatalogKey}
+            focusedResultMode={isFocusedSiteResultMode}
+            showOtherDiveSites={showOtherDiveSites}
+            canShowOtherDiveSites={canShowOtherDiveSites}
+            onShowOtherDiveSitesChange={setShowOtherDiveSites}
+            onSelectDeparture={toggleDepartureFromMap}
+            onSelectDiveSite={toggleDiveSiteFromMap}
+            onSelectDiveCenter={toggleDiveCenterFromMap}
           />
           {isAnythingLoading && (
             <div className="map-message">{t.status.loadingMapLayers}</div>
@@ -887,13 +1003,47 @@ function App() {
               </button>
             </div>
             <div className="detail-panel__content">
-              {selectedDiveCenter ? (
-                <DiveCenterDetails
-                  center={selectedDiveCenter}
-                  enrichment={selectedCenterEnrichment}
-                  nearbySites={nearbySitesForCenter}
-                  onSelectSite={selectDiveSite}
-                />
+              {isNearbyCenterJourneyOpen && selectedDiveCenter ? (
+                <>
+                  <button className="journey-back" type="button" onClick={backToNearbyCenterCatalog}>
+                    ← {t.catalog.backToDiveCenters}
+                  </button>
+                  <DiveCenterDetails
+                    center={selectedDiveCenter}
+                    enrichment={selectedCenterEnrichment}
+                    nearbySites={nearbySitesForCenter}
+                    onSelectSite={selectDiveSite}
+                  />
+                </>
+              ) : isNearbyCenterJourneyOpen && selectedDiveSite ? (
+                <>
+                  <button className="journey-back" type="button" onClick={backToDiveSiteDetail}>
+                    ← {t.catalog.backToDiveSite}
+                  </button>
+                  <DiveCenterCatalog
+                    items={nearbyCenterCatalog}
+                    selectedCenter={selectedDiveCenter}
+                    heading={t.catalog.nearbyDiveCentersFor.replace(
+                      '{site}',
+                      selectedDiveSite.properties.site_name,
+                    )}
+                    onSelect={selectDiveCenter}
+                  />
+                </>
+              ) : selectedDiveCenter ? (
+                <>
+                  {userGoal === 'findCenter' ? (
+                    <button className="journey-back" type="button" onClick={backToNearbyCenterCatalog}>
+                      ← {t.catalog.backToDiveCenters}
+                    </button>
+                  ) : null}
+                  <DiveCenterDetails
+                    center={selectedDiveCenter}
+                    enrichment={selectedCenterEnrichment}
+                    nearbySites={nearbySitesForCenter}
+                    onSelectSite={selectDiveSite}
+                  />
+                </>
               ) : selectedDiveSite ? (
                 <DiveSiteDetails
                   site={selectedDiveSite}
@@ -901,11 +1051,10 @@ function App() {
                   selectedDeparture={selectedDeparture}
                   directDistanceNm={selectedDiveSiteDistanceNm}
                   boatSpeedKnots={boatSpeedKnots}
-                  nearbyCenters={nearbyDiveCenters}
                   nearbyDepartures={nearbyDepartureOptions}
                   certificationLabel={certificationLabel}
                   effectiveDepthLimit={effectiveDepthLimit}
-                  onSelectCenter={selectDiveCenter}
+                  onFindDiveCenters={openNearbyCenterJourney}
                 />
               ) : null}
             </div>

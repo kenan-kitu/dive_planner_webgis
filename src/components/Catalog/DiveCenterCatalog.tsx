@@ -12,6 +12,20 @@ export interface CenterCatalogItem {
   distanceNm?: number
 }
 
+function safeWebsite(value: string | null | undefined): string | null {
+  if (!value) return null
+  try {
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
+function phoneHref(value: string): string {
+  return `tel:${value.replace(/[^\d+]/g, '')}`
+}
+
 interface DiveCenterCatalogProps {
   items: readonly CenterCatalogItem[]
   selectedCenter: DiveCenterFeature | null
@@ -70,6 +84,8 @@ export function DiveCenterCatalog({
             const photo = enrichment?.photos[0]
             const isSelected = selectedCenter === center
             const services = enrichment?.services.slice(0, 3) ?? []
+            const phone = enrichment?.phone ?? center.properties.phone
+            const website = safeWebsite(enrichment?.website ?? center.properties.website)
 
             return (
               <article
@@ -101,6 +117,15 @@ export function DiveCenterCatalog({
                   ) : null}
                   {services.length ? (
                     <p className="catalog-card__summary">{services.join(' · ')}</p>
+                  ) : null}
+                  {enrichment?.description ? (
+                    <p className="catalog-card__summary">{enrichment.description}</p>
+                  ) : null}
+                  {phone || website ? (
+                    <div className="catalog-card__contact">
+                      {phone ? <a href={phoneHref(phone)}>{phone}</a> : null}
+                      {website ? <a href={website} target="_blank" rel="noreferrer">{t.popup.visitWebsite}</a> : null}
+                    </div>
                   ) : null}
                   <button type="button" onClick={() => onSelect(center)}>
                     {t.catalog.viewCenter}

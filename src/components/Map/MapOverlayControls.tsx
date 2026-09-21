@@ -13,6 +13,9 @@ interface MapOverlayControlsProps {
   nauticalVisible: boolean
   onBasemapChange: (basemap: BasemapId) => void
   onNauticalChange: (visible: boolean) => void
+  canShowOtherDiveSites: boolean
+  showOtherDiveSites: boolean
+  onShowOtherDiveSitesChange: (visible: boolean) => void
 }
 
 interface SymbolLegendItem {
@@ -39,6 +42,9 @@ export function MapOverlayControls({
   nauticalVisible,
   onBasemapChange,
   onNauticalChange,
+  canShowOtherDiveSites,
+  showOtherDiveSites,
+  onShowOtherDiveSitesChange,
 }: MapOverlayControlsProps) {
   const { t } = useLanguage()
   const [legendOpen, setLegendOpen] = useState(() =>
@@ -68,6 +74,18 @@ export function MapOverlayControls({
 
   return (
     <div className="map-overlay-controls">
+      {canShowOtherDiveSites ? (
+        <button
+          type="button"
+          className="map-result-visibility"
+          aria-pressed={showOtherDiveSites}
+          onClick={() => onShowOtherDiveSitesChange(!showOtherDiveSites)}
+        >
+          {showOtherDiveSites
+            ? t.catalog.hideOtherDiveSites
+            : t.catalog.showOtherDiveSites}
+        </button>
+      ) : null}
       <section className={`map-style-control${stylesOpen ? ' is-open' : ''}`}>
         <button
           type="button"

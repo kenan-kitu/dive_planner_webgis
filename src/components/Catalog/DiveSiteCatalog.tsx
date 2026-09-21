@@ -22,20 +22,17 @@ interface DiveSiteCatalogProps {
   onSelect: (site: DiveSiteFeature) => void
 }
 
-function depthLabel(
+function depthValues(
   site: DiveSiteFeature,
   enrichment: DiveSiteEnrichment | null,
-): string {
+): { minimum: number | null; maximum: number | null } {
   const minimum = enrichment?.knownDepth
     ? enrichment.knownDepth.minimumMeters
     : site.properties.min_depth_m
   const maximum = enrichment?.knownDepth
     ? enrichment.knownDepth.maximumMeters
     : site.properties.max_depth_m
-  if (minimum == null && maximum == null) return '—'
-  if (minimum == null) return `≤ ${maximum} m`
-  if (maximum == null) return `≥ ${minimum} m`
-  return `${minimum}–${maximum} m`
+  return { minimum, maximum }
 }
 
 export function DiveSiteCatalog({
@@ -108,6 +105,7 @@ export function DiveSiteCatalog({
             const result = analysis.get(site)
             const isSelected = selectedSite === site
             const type = enrichment?.diveType ?? site.properties.site_type
+            const depth = depthValues(site, enrichment)
 
             return (
               <article
@@ -127,8 +125,27 @@ export function DiveSiteCatalog({
                         : t.popup.notListed}
                     </small>
                     <h3>{enrichment?.canonicalName ?? site.properties.site_name}</h3>
-                    <p>{depthLabel(site, enrichment)}</p>
                   </div>
+                  <dl className="catalog-card__depth">
+                    {depth.minimum != null ? (
+                      <div>
+                        <dt>{t.details.minimumDepth}</dt>
+                        <dd>{depth.minimum} m</dd>
+                      </div>
+                    ) : null}
+                    {depth.maximum != null ? (
+                      <div>
+                        <dt>{t.details.maximumDepth}</dt>
+                        <dd>{depth.maximum} m</dd>
+                      </div>
+                    ) : null}
+                    {depth.minimum == null && depth.maximum == null ? (
+                      <div>
+                        <dt>{t.details.depth}</dt>
+                        <dd>{t.popup.notAvailable}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
                   {enrichment?.summary ? (
                     <p className="catalog-card__summary">{enrichment.summary}</p>
                   ) : null}

@@ -1,4 +1,4 @@
-import { marker, type Layer } from 'leaflet'
+import { latLngBounds, marker, type Layer } from 'leaflet'
 import { useEffect, useMemo, useState } from 'react'
 import {
   GeoJSON,
@@ -48,11 +48,17 @@ interface DiveMapProps {
   nearbyDiveCenterIds: ReadonlySet<number>
   resultSiteNames: ReadonlySet<string>
   resultCenterIds: ReadonlySet<number>
+  resultDiveSites: readonly DiveSiteFeature[]
+  resultKey: string
+  focusedResultMode: boolean
+  showOtherDiveSites: boolean
+  canShowOtherDiveSites: boolean
   maximumDistanceNm: number
   boatSpeedKnots: number
   onSelectDeparture: (recordId: number) => void
   onSelectDiveSite: (site: DiveSiteFeature) => void
   onSelectDiveCenter: (center: DiveCenterFeature) => void
+  onShowOtherDiveSitesChange: (visible: boolean) => void
 }
 
 const FLORIDA_KEYS_CENTER: [number, number] = [24.72, -81.1]
@@ -112,6 +118,36 @@ function MapResizeController() {
 
     return () => observer.disconnect()
   }, [map])
+
+  return null
+}
+
+function MapResultsController({
+  enabled,
+  resultSites,
+  resultKey,
+}: {
+  enabled: boolean
+  resultSites: readonly DiveSiteFeature[]
+  resultKey: string
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!enabled || resultSites.length === 0) return
+    if (resultSites.length === 1) {
+      map.flyTo(featureLatLng(resultSites[0]), 11, {
+        animate: true,
+        duration: 0.55,
+      })
+      return
+    }
+
+    map.fitBounds(
+      latLngBounds(resultSites.map((site) => featureLatLng(site))),
+      { animate: true, duration: 0.6, maxZoom: 11, padding: [52, 52] },
+    )
+  }, [enabled, map, resultKey, resultSites])
 
   return null
 }
@@ -209,11 +245,17 @@ export function DiveMap({
   nearbyDiveCenterIds,
   resultSiteNames,
   resultCenterIds,
+  resultDiveSites,
+  resultKey,
+  focusedResultMode,
+  showOtherDiveSites,
+  canShowOtherDiveSites,
   maximumDistanceNm,
   boatSpeedKnots,
   onSelectDeparture,
   onSelectDiveSite,
   onSelectDiveCenter,
+  onShowOtherDiveSitesChange,
 }: DiveMapProps) {
   const { language, t } = useLanguage()
   const [basemap, setBasemap] = useState<BasemapId>(readBasemap)
@@ -236,6 +278,10 @@ export function DiveMap({
         : null,
     [selectedDeparture, selectedDiveSite],
   )
+  const visibleDiveSites = useMemo<DiveSiteCollection | null>(() => {
+    if (!diveSites || !focusedResultMode || showOtherDiveSites) return diveSites
+    return { ...diveSites, features: [...resultDiveSites] }
+  }, [diveSites, focusedResultMode, resultDiveSites, showOtherDiveSites])
 
   const changeBasemap = (nextBasemap: BasemapId) => {
     window.sessionStorage.setItem(SESSION_BASEMAP_KEY, nextBasemap)
@@ -291,6 +337,11 @@ export function DiveMap({
         selectedDiveSite={selectedDiveSite}
         selectedDiveCenter={selectedDiveCenter}
       />
+      <MapResultsController
+        enabled={focusedResultMode}
+        resultSites={resultDiveSites}
+        resultKey={resultKey}
+      />
       <MapResizeController />
 
       {reachZone && (
@@ -300,10 +351,10 @@ export function DiveMap({
           style={{
             className: 'reach-zone-path',
             color: MAP_ANALYSIS_STYLES.reachZone.color,
-            weight: 1.5,
-            opacity: 0.72,
+            weight: 2.75,
+            opacity: 0.96,
             fillColor: MAP_ANALYSIS_STYLES.reachZone.fillColor,
-            fillOpacity: 0.08,
+            fillOpacity: 0.16,
           }}
           onEachFeature={(_, layer: Layer) => {
             layer.bindTooltip(
@@ -355,9 +406,10 @@ export function DiveMap({
             const properties = (feature as DeparturePointFeature).properties
             const type = localizeDataValue(properties.type, t)
 
+            const isSelected = properties.record_id === selectedDeparture?.properties.record_id
             layer.on('click', () => onSelectDeparture(properties.record_id))
 
-            layer.bindPopup(`
+            if (!isSelected) layer.bindPopup(`
               <article class="site-popup">
                 <p class="site-popup__eyebrow">${escapeHtml(t.dataValues.departurePoint)}</p>
                 <h2>${escapeHtml(properties.name)}</h2>
@@ -402,9 +454,10 @@ export function DiveMap({
             const center = feature as DiveCenterFeature
             const properties = center.properties
 
+            const isSelected = properties.record_id === selectedDiveCenter?.properties.record_id
             layer.on('click', () => onSelectDiveCenter(center))
 
-            layer.bindPopup(`
+            if (!isSelected) layer.bindPopup(`
               <article class="site-popup">
                 <p class="site-popup__eyebrow">${escapeHtml(t.dataValues.diveCenter)}</p>
                 <h2>${escapeHtml(properties.name)}</h2>
@@ -420,10 +473,10 @@ export function DiveMap({
         />
       )}
 
-      {visibility.diveSites && diveSites && (
+      {visibility.diveSites && visibleDiveSites && (
         <GeoJSON
-          key={`dive-sites-${language}-${analysisKey}-${selectedDiveSite?.properties.site_name ?? 'none'}`}
-          data={diveSites}
+          key={`dive-sites-${language}-${analysisKey}-${selectedDiveSite?.properties.site_name ?? 'none'}-${showOtherDiveSites}`}
+          data={visibleDiveSites}
           pointToLayer={(feature, latlng) => {
             const site = feature as DiveSiteFeature
             const properties = site.properties
@@ -464,11 +517,12 @@ export function DiveMap({
               ? `<p class="site-popup__notice"><strong>${escapeHtml(t.planning.directBoatRouteEstimate)}</strong><br>${escapeHtml(t.planning.directRouteDisclaimer)}</p>`
               : ''
 
+            const isSelected = properties.site_name === selectedDiveSite?.properties.site_name
             layer.on('click', () => {
               onSelectDiveSite(site)
             })
 
-            layer.bindPopup(`
+            if (!isSelected) layer.bindPopup(`
               <article class="site-popup">
                 <p class="site-popup__eyebrow">${escapeHtml(siteType)}</p>
                 <h2>${escapeHtml(properties.site_name)}</h2>
@@ -491,6 +545,9 @@ export function DiveMap({
         nauticalVisible={nauticalVisible}
         onBasemapChange={changeBasemap}
         onNauticalChange={changeNautical}
+        canShowOtherDiveSites={canShowOtherDiveSites}
+        showOtherDiveSites={showOtherDiveSites}
+        onShowOtherDiveSitesChange={onShowOtherDiveSitesChange}
       />
     </>
   )
