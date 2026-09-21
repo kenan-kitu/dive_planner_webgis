@@ -55,6 +55,8 @@ interface DiveMapProps {
   canShowOtherDiveSites: boolean
   maximumDistanceNm: number
   boatSpeedKnots: number
+  showTripAnalysis: boolean
+  showLegend: boolean
   onSelectDeparture: (recordId: number) => void
   onSelectDiveSite: (site: DiveSiteFeature) => void
   onSelectDiveCenter: (center: DiveCenterFeature) => void
@@ -67,7 +69,9 @@ const SESSION_NAUTICAL_KEY = 'dive-planner-nautical-overlay'
 
 function readBasemap(): BasemapId {
   const value = window.sessionStorage.getItem(SESSION_BASEMAP_KEY)
-  return value === 'street' || value === 'satellite' ? value : 'light'
+  return value === 'light' || value === 'street' || value === 'satellite'
+    ? value
+    : 'satellite'
 }
 
 function featureLatLng(
@@ -252,6 +256,8 @@ export function DiveMap({
   canShowOtherDiveSites,
   maximumDistanceNm,
   boatSpeedKnots,
+  showTripAnalysis,
+  showLegend,
   onSelectDeparture,
   onSelectDiveSite,
   onSelectDiveCenter,
@@ -266,17 +272,17 @@ export function DiveMap({
   const basemapDefinition = BASEMAPS[basemap]
   const reachZone = useMemo(
     () =>
-      selectedDeparture
+      showTripAnalysis && selectedDeparture
         ? createReachZone(selectedDeparture, maximumDistanceNm)
         : null,
-    [maximumDistanceNm, selectedDeparture],
+    [maximumDistanceNm, selectedDeparture, showTripAnalysis],
   )
   const directRoute = useMemo(
     () =>
-      selectedDeparture && selectedDiveSite
+      showTripAnalysis && selectedDeparture && selectedDiveSite
         ? createDirectRouteLine(selectedDeparture, selectedDiveSite)
         : null,
-    [selectedDeparture, selectedDiveSite],
+    [selectedDeparture, selectedDiveSite, showTripAnalysis],
   )
   const visibleDiveSites = useMemo<DiveSiteCollection | null>(() => {
     if (!diveSites || !focusedResultMode || showOtherDiveSites) return diveSites
@@ -548,6 +554,7 @@ export function DiveMap({
         canShowOtherDiveSites={canShowOtherDiveSites}
         showOtherDiveSites={showOtherDiveSites}
         onShowOtherDiveSitesChange={onShowOtherDiveSitesChange}
+        showLegend={showLegend}
       />
     </>
   )

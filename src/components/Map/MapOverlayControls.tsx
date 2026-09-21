@@ -16,6 +16,7 @@ interface MapOverlayControlsProps {
   canShowOtherDiveSites: boolean
   showOtherDiveSites: boolean
   onShowOtherDiveSitesChange: (visible: boolean) => void
+  showLegend: boolean
 }
 
 interface SymbolLegendItem {
@@ -45,6 +46,7 @@ export function MapOverlayControls({
   canShowOtherDiveSites,
   showOtherDiveSites,
   onShowOtherDiveSitesChange,
+  showLegend,
 }: MapOverlayControlsProps) {
   const { t } = useLanguage()
   const [legendOpen, setLegendOpen] = useState(() =>
@@ -124,7 +126,7 @@ export function MapOverlayControls({
         ) : null}
       </section>
 
-      <section className={`map-legend${legendOpen ? ' is-open' : ''}`}>
+      {showLegend ? <section className={`map-legend${legendOpen ? ' is-open' : ''}`}>
         <button
           type="button"
           className="map-overlay-toggle"
@@ -186,7 +188,7 @@ export function MapOverlayControls({
             </div>
           </div>
         ) : null}
-      </section>
+      </section> : null}
     </div>
   )
 }

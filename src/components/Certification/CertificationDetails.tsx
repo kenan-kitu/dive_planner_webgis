@@ -6,7 +6,7 @@ interface CertificationDetailsProps {
   previousQualification?: CertificationLevel
   additionalQualification?: CertificationLevel
   effectiveDepthLimit: number | null
-  matchingText: string
+  matchingText: string | null
   copy: CertificationCopy
 }
 
@@ -62,7 +62,7 @@ export function CertificationDetails({
                   String(effectiveDepthLimit),
                 )}
           </dd>
-          <small>{matchingText}</small>
+          {matchingText ? <small>{matchingText}</small> : null}
         </div>
       </dl>
 

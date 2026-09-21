@@ -17,6 +17,8 @@ interface DiveSiteDetailsProps {
   certificationLabel: string | null
   effectiveDepthLimit: number | null
   onFindDiveCenters: () => void
+  onPlanBoatTrip: () => void
+  onShowOnMap: () => void
 }
 
 function depthValues(site: DiveSiteFeature, enrichment: DiveSiteEnrichment | null) {
@@ -49,6 +51,8 @@ export function DiveSiteDetails({
   certificationLabel,
   effectiveDepthLimit,
   onFindDiveCenters,
+  onPlanBoatTrip,
+  onShowOnMap,
 }: DiveSiteDetailsProps) {
   const { language, t } = useLanguage()
   const localizedEnrichment = localizeDiveSiteEnrichment(enrichment, language)
@@ -132,11 +136,18 @@ export function DiveSiteDetails({
       )}
 
       <section className="detail-section detail-primary-action">
-        <h3>{t.planning.nearbyDiveCenters}</h3>
-        <p>{t.catalog.proximityOnly}</p>
-        <button type="button" onClick={onFindDiveCenters}>
-          {t.catalog.findDiveCenterForSite}
-        </button>
+        <h3>{t.planning.divePlanning}</h3>
+        <div className="detail-action-grid">
+          <button type="button" onClick={onFindDiveCenters}>
+            {t.catalog.findDiveCenterForSite}
+          </button>
+          <button type="button" onClick={onPlanBoatTrip}>
+            {t.catalog.planBoatTripForSite}
+          </button>
+          <button type="button" onClick={onShowOnMap}>
+            {t.catalog.showOnMap}
+          </button>
+        </div>
       </section>
 
       <section className="detail-section nearby-departures">

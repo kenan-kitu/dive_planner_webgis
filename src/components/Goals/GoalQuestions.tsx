@@ -8,8 +8,11 @@ import type { DiverProfile as DiverProfileValue } from '../../utils/certificatio
 
 export type TravelPreference = 'none' | 'short' | 'departure'
 export type CenterJourney = 'site' | 'browse'
+export type SiteMatchStep = 'certification' | 'type' | 'travel' | 'results'
+export type BoatTripStep = 'departure' | 'distance' | 'speed' | 'results'
 
 interface SiteMatchQuestionsProps {
+  step: SiteMatchStep
   profile: DiverProfileValue
   effectiveDepthLimit: number | null
   matchingSiteCount: number
@@ -24,6 +27,8 @@ interface SiteMatchQuestionsProps {
   onTravelPreferenceChange: (preference: TravelPreference) => void
   onDepartureChange: (recordId: number | null) => void
   onMaximumDistanceChange: (distanceNm: number) => void
+  onBack: () => void
+  onNext: () => void
 }
 
 function DepartureSelect({
@@ -63,6 +68,7 @@ function DepartureSelect({
 }
 
 export function SiteMatchQuestions({
+  step,
   profile,
   effectiveDepthLimit,
   matchingSiteCount,
@@ -77,23 +83,27 @@ export function SiteMatchQuestions({
   onTravelPreferenceChange,
   onDepartureChange,
   onMaximumDistanceChange,
+  onBack,
+  onNext,
 }: SiteMatchQuestionsProps) {
   const { t } = useLanguage()
+  const stepNumber = ['certification', 'type', 'travel'].indexOf(step) + 1
 
   return (
     <section className="journey-questions">
       <header>
-        <p className="eyebrow">{t.catalog.shortQuestions}</p>
+        <p className="eyebrow">{t.catalog.stepProgress.replace('{current}', String(stepNumber)).replace('{total}', '3')}</p>
         <h2>{t.catalog.tellUsAboutDive}</h2>
       </header>
-      <DiverProfile
+      {step === 'certification' ? <DiverProfile
         profile={profile}
         effectiveDepthLimit={effectiveDepthLimit}
         matchingSiteCount={matchingSiteCount}
         totalSiteCount={totalSiteCount}
+        showMatchingSiteCount={false}
         onChange={onProfileChange}
-      />
-      <label className="journey-field">
+      /> : null}
+      {step === 'type' ? <label className="journey-field">
         <span>{t.catalog.preferredDiveType}</span>
         <select
           value={selectedSiteType ?? ''}
@@ -104,8 +114,8 @@ export function SiteMatchQuestions({
           <option value="wreck">{t.dataValues.wreck}</option>
           <option value="wall">{t.dataValues.wall}</option>
         </select>
-      </label>
-      <label className="journey-field">
+      </label> : null}
+      {step === 'travel' ? <><label className="journey-field">
         <span>{t.catalog.travelPreference}</span>
         <select
           value={travelPreference}
@@ -141,12 +151,19 @@ export function SiteMatchQuestions({
             }
           />
         </label>
-      ) : null}
+      ) : null}</> : null}
+      <div className="journey-navigation">
+        {step !== 'certification' ? <button type="button" onClick={onBack}>{t.catalog.back}</button> : <span />}
+        <button type="button" className="is-primary" onClick={onNext}>
+          {step === 'travel' ? t.catalog.showResults : t.catalog.next}
+        </button>
+      </div>
     </section>
   )
 }
 
 interface BoatTripQuestionsProps {
+  step: BoatTripStep
   departurePoints: DeparturePointCollection | null
   selectedDepartureId: number | null
   boatSpeedKnots: number
@@ -154,9 +171,12 @@ interface BoatTripQuestionsProps {
   onDepartureChange: (recordId: number | null) => void
   onBoatSpeedChange: (speedKnots: number) => void
   onMaximumDistanceChange: (distanceNm: number) => void
+  onBack: () => void
+  onNext: () => void
 }
 
 export function BoatTripQuestions({
+  step,
   departurePoints,
   selectedDepartureId,
   boatSpeedKnots,
@@ -164,21 +184,24 @@ export function BoatTripQuestions({
   onDepartureChange,
   onBoatSpeedChange,
   onMaximumDistanceChange,
+  onBack,
+  onNext,
 }: BoatTripQuestionsProps) {
   const { t } = useLanguage()
+  const stepNumber = ['departure', 'distance', 'speed'].indexOf(step) + 1
 
   return (
     <section className="journey-questions">
       <header>
-        <p className="eyebrow">{t.catalog.threeSteps}</p>
+        <p className="eyebrow">{t.catalog.stepProgress.replace('{current}', String(stepNumber)).replace('{total}', '3')}</p>
         <h2>{t.catalog.planBoatTrip}</h2>
       </header>
-      <DepartureSelect
+      {step === 'departure' ? <DepartureSelect
         departurePoints={departurePoints}
         selectedDepartureId={selectedDepartureId}
         onDepartureChange={onDepartureChange}
-      />
-      <label className="journey-range">
+      /> : null}
+      {step === 'speed' ? <label className="journey-range">
         <span>
           {t.planning.boatSpeed}
           <strong>{boatSpeedKnots} {t.planning.knotAbbreviation}</strong>
@@ -190,8 +213,8 @@ export function BoatTripQuestions({
           value={boatSpeedKnots}
           onChange={(event) => onBoatSpeedChange(Number(event.target.value))}
         />
-      </label>
-      <label className="journey-range">
+      </label> : null}
+      {step === 'distance' ? <label className="journey-range">
         <span>
           {t.planning.maximumBoatDistance}
           <strong>{maximumDistanceNm} NM</strong>
@@ -206,7 +229,18 @@ export function BoatTripQuestions({
             onMaximumDistanceChange(Number(event.target.value))
           }
         />
-      </label>
+      </label> : null}
+      <div className="journey-navigation">
+        {step !== 'departure' ? <button type="button" onClick={onBack}>{t.catalog.back}</button> : <span />}
+        <button
+          type="button"
+          className="is-primary"
+          disabled={step === 'departure' && selectedDepartureId == null}
+          onClick={onNext}
+        >
+          {step === 'speed' ? t.catalog.showResults : t.catalog.next}
+        </button>
+      </div>
     </section>
   )
 }

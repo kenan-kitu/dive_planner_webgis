@@ -19,6 +19,7 @@ interface DiverProfileProps {
   effectiveDepthLimit: number | null
   matchingSiteCount: number
   totalSiteCount: number
+  showMatchingSiteCount?: boolean
   onChange: (profile: DiverProfileValue) => void
 }
 
@@ -27,6 +28,7 @@ export function DiverProfile({
   effectiveDepthLimit,
   matchingSiteCount,
   totalSiteCount,
+  showMatchingSiteCount = true,
   onChange,
 }: DiverProfileProps) {
   const { language } = useLanguage()
@@ -235,7 +237,7 @@ export function DiverProfile({
         previousQualification={previousQualification}
         additionalQualification={additionalQualification}
         effectiveDepthLimit={effectiveDepthLimit}
-        matchingText={matchingText}
+        matchingText={showMatchingSiteCount ? matchingText : null}
         copy={copy}
       />
 

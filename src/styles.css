@@ -495,6 +495,42 @@ select {
   accent-color: #087b89;
 }
 
+.journey-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.journey-navigation button {
+  min-width: 104px;
+  min-height: 44px;
+  padding: 8px 14px;
+  color: #315d66;
+  font-weight: 800;
+  border: 1px solid #b9d2d5;
+  border-radius: 9px;
+  background: #f4fafa;
+  cursor: pointer;
+}
+
+.journey-navigation button.is-primary {
+  color: #fff;
+  border-color: #087483;
+  background: #087483;
+}
+
+.journey-navigation button:disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+}
+
+.detail-action-grid {
+  display: grid;
+  gap: 8px;
+}
+
 .journey-choice > div {
   display: grid;
   gap: 10px;
@@ -3024,6 +3060,19 @@ footer strong {
     visibility: visible;
     transition-delay: 0s;
     pointer-events: auto;
+  }
+
+  .sidebar.is-mobile-open.is-detail-open {
+    height: calc(100vh - 64px);
+    max-height: calc(100vh - 64px);
+    border-radius: 0;
+  }
+
+  @supports (height: 100dvh) {
+    .sidebar.is-mobile-open.is-detail-open {
+      height: calc(100dvh - 64px);
+      max-height: calc(100dvh - 64px);
+    }
   }
 
   .mobile-sheet-backdrop {
