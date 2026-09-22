@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { DiverProfile } from './components/Certification/DiverProfile'
 import { LanguageSwitcher } from './components/LanguageSwitcher/LanguageSwitcher'
+import { AuthControls } from './components/Auth/AuthControls'
 import { DiveMap } from './components/Map/DiveMap'
 import { DiveCenterDetails } from './components/Details/DiveCenterDetails'
 import { DiveSiteDetails } from './components/Details/DiveSiteDetails'
@@ -785,6 +786,7 @@ function App() {
           <h1>{t.app.title}</h1>
         </div>
         <div className="topbar__actions">
+          <AuthControls />
           <LanguageSwitcher />
           <div className="phase-badge">{t.app.phase}</div>
         </div>

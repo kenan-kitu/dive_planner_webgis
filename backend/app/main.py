@@ -4,6 +4,7 @@ from geoalchemy2 import Geography
 from sqlalchemy import Float, cast, func, select, text
 from sqlalchemy.orm import Session
 
+from app.auth.routes import router as auth_router
 from app.config import get_settings
 from app.database import get_db
 from app.geojson import collection, feature_from_record
@@ -16,9 +17,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+app.include_router(auth_router)
 
 
 def point_columns(model: type) -> tuple:
