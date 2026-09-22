@@ -10,6 +10,7 @@
     "test:enrichment": "node --experimental-strip-types scripts/verify-enrichment.mts",
     "test:rich-details": "node --experimental-strip-types scripts/verify-rich-details.mts",
     "test:spatial": "node --experimental-strip-types scripts/verify-spatial.mts",
+    "test:filters": "node --experimental-strip-types scripts/verify-site-filtering.mts",
     "preview": "vite preview"
   },
   "dependencies": {

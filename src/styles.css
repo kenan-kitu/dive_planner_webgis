@@ -2679,7 +2679,7 @@ select {
   height: 30px;
   color: #fff;
   border: 3px solid #fff;
-  background: #078293;
+  background: var(--map-symbol-color, #078293);
   box-shadow:
     0 0 0 1px rgb(7 44 53 / 70%),
     0 3px 9px rgb(7 39 48 / 42%);
@@ -2701,31 +2701,26 @@ select {
 .map-symbol--reef {
   color: #fff;
   border-radius: 50%;
-  background: #007d88;
 }
 
 .map-symbol--wreck {
   color: #fff;
   border-radius: 8px;
-  background: #7651a1;
 }
 
 .map-symbol--wall {
   color: #fff;
   border-radius: 5px 12px 5px 12px;
-  background: #16755a;
 }
 
 .map-symbol--diveCenter {
   color: #fff;
   border-radius: 8px;
-  background: #d84f38;
 }
 
 .map-symbol--departure {
   color: #fff;
   border-radius: 50% 50% 50% 8px;
-  background: #234b91;
   transform: rotate(-45deg);
 }
 

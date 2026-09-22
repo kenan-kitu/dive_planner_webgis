@@ -37,7 +37,6 @@ import {
 } from './services/geoserver'
 import type {
   DeparturePointCollection,
-  DiveSiteAnalysis,
   DiveSiteFeature,
   DiveCenterCollection,
   DiveCenterFeature,
@@ -47,7 +46,11 @@ import {
   getEffectiveDepthLimit,
   type DiverProfile as DiverProfileValue,
 } from './utils/certification'
-import { calculateDistanceNm, findNearestPoints } from './utils/spatial'
+import { findNearestPoints } from './utils/spatial'
+import {
+  createDiveSiteAnalysis,
+  filterDiveSitesForJourney,
+} from './utils/siteFiltering'
 import {
   getDiveCenterEnrichment,
   getDiveSiteEnrichment,
@@ -235,33 +238,13 @@ function App() {
     [diveSites],
   )
   const siteAnalysis = useMemo(() => {
-    const analysis = new Map<DiveSiteFeature, DiveSiteAnalysis>()
-
-    for (const site of diveSites?.features ?? []) {
-      const maximumDepth = site.properties.max_depth_m
-      const matchesDepth =
-        effectiveDepthLimit === null ||
-        (maximumDepth !== null && maximumDepth <= effectiveDepthLimit)
-      const matchesType =
-        selectedSiteType === null ||
-        site.properties.site_type?.toLowerCase() ===
-          selectedSiteType.toLowerCase()
-      const distanceNm = selectedDeparture
-        ? calculateDistanceNm(selectedDeparture, site)
-        : null
-      const matchesDistance =
-        distanceNm === null || distanceNm <= maximumDistanceNm
-
-      analysis.set(site, {
-        distanceNm,
-        matchesDepth,
-        matchesType,
-        matchesDistance,
-        isFullMatch: matchesDepth && matchesType && matchesDistance,
-      })
-    }
-
-    return analysis
+    return createDiveSiteAnalysis(
+      diveSites?.features ?? [],
+      effectiveDepthLimit,
+      selectedSiteType,
+      selectedDeparture,
+      maximumDistanceNm,
+    )
   }, [
     diveSites,
     effectiveDepthLimit,
@@ -326,16 +309,12 @@ function App() {
       ] ?? selectedSiteType)
     : t.planning.allDiveTypes
   const findSiteResults = useMemo(() => {
-    const sites = (diveSites?.features ?? []).filter((site) => {
-      const result = siteAnalysis.get(site)
-      if (!result?.matchesDepth || !result.matchesType) return false
-      if (travelPreference === 'none') return true
-      if (!selectedDeparture) return false
-      if (travelPreference === 'short') {
-        return result.distanceNm != null && result.distanceNm <= 5
-      }
-      return result.matchesDistance
-    })
+    const sites = filterDiveSitesForJourney(
+      diveSites?.features ?? [],
+      siteAnalysis,
+      travelPreference,
+      selectedDeparture !== null,
+    )
 
     return [...sites].sort((first, second) => {
       if (selectedDeparture) {
