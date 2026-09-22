@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models import UserRole
 
@@ -54,3 +55,47 @@ class TokenResponse(BaseModel):
     token_type: Literal["bearer"] = "bearer"
     expires_in: int
     user: UserResponse
+
+
+class CommentBody(BaseModel):
+    body: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("body")
+    @classmethod
+    def body_must_contain_text(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Comment cannot be empty")
+        return cleaned
+
+
+class CommentCreate(CommentBody):
+    pass
+
+
+class CommentUpdate(CommentBody):
+    pass
+
+
+class CommentResponse(BaseModel):
+    id: int
+    user_id: int
+    display_name: str
+    role: UserRole
+    body: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class RatingRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+
+
+class RatingSummary(BaseModel):
+    average_rating: float | None
+    rating_count: int
+    current_user_rating: int | None
+
+
+class FavoriteStatus(BaseModel):
+    favorited: bool

@@ -29,6 +29,15 @@ React -> register/login -> FastAPI -> Argon2 verification -> JWT
 React -> Bearer JWT -> FastAPI -> current PostgreSQL user -> role check
 ```
 
+V2.3 adds small community resources without changing the GeoServer/WFS map pipeline:
+
+```text
+React -> FastAPI -> PostgreSQL/PostGIS
+
+Authenticated USER -> Bearer JWT -> Comment / Rating / Favorite
+Anonymous visitor  -> public GET  -> Comments / rating summary
+```
+
 ## Start locally
 
 1. Copy `.env.example` to `.env` only if you need to override the safe local defaults.
@@ -94,6 +103,50 @@ Role examples:
 - `GET /api/dive-center/dashboard`: `DIVE_CENTER` or `ADMIN`.
 - `GET /api/admin/status`: `ADMIN` only.
 
+## Comments, ratings, and favorites
+
+Comments are normal CRUD resources tied to one user and one dive site. The API stores the user foreign key instead of duplicating a display name. Anyone can read comments; authenticated users can create comments and edit or delete their own. `ADMIN` may edit or delete any comment. Comment text is trimmed, cannot be empty, and is limited to 2,000 characters.
+
+- `GET /api/dive-sites/{site_id}/comments` — public list
+- `POST /api/dive-sites/{site_id}/comments` — authenticated create
+- `PATCH /api/comments/{comment_id}` — owner or `ADMIN`
+- `DELETE /api/comments/{comment_id}` — owner or `ADMIN`
+
+Ratings are integers from 1 to 5. The database unique constraint on `(user_id, dive_site_id)` guarantees one active rating per user/site pair. Sending a second rating updates that row. Public summaries return a one-decimal average and count; an authenticated response also includes that user's current rating.
+
+- `GET /api/dive-sites/{site_id}/rating` — public aggregate
+- `PUT /api/dive-sites/{site_id}/rating` — authenticated create/update
+- `DELETE /api/dive-sites/{site_id}/rating` — remove the current user's rating
+
+Favorites implement the user-to-dive-site many-to-many relationship. The unique `(user_id, dive_site_id)` constraint prevents duplicates. Favorite lists are private because `/api/account/favorites` always derives the user from the JWT; it never accepts another user id.
+
+- `GET /api/account/favorites` — current user's GeoJSON dive-site list
+- `GET /api/dive-sites/{site_id}/favorite-status` — current user's state
+- `POST /api/dive-sites/{site_id}/favorite` — add idempotently
+- `DELETE /api/dive-sites/{site_id}/favorite` — remove idempotently
+
+All three tables use explicit foreign keys to `users.id` and `dive_sites.fid`. `ON DELETE CASCADE` prevents orphan community rows if a user or dive site is deliberately removed. Migration `20260922_0003` creates these tables, indexes, range checks, and unique constraints without changing imported GIS rows.
+
+Example authenticated comment request:
+
+```http
+POST /api/dive-sites/1/comments
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{"body":"Good visibility during our morning dive."}
+```
+
+Example rating request:
+
+```http
+PUT /api/dive-sites/1/rating
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{"rating":5}
+```
+
 Registration example:
 
 ```json
@@ -134,7 +187,7 @@ The command can be rerun: it creates missing accounts and updates existing local
 
 ### Security scope
 
-This is a portfolio-oriented local implementation. The JWT signing secret in `.env.example` is explicitly development-only and must be replaced in any non-local environment. Access tokens are stored in browser `localStorage` to keep this phase understandable; this is convenient but JavaScript-accessible and therefore more exposed to cross-site scripting than an `HttpOnly`, `Secure` cookie design. Refresh-token rotation, password reset, email verification, login throttling, MFA, and external OAuth providers are intentionally outside V2.2.
+This is a portfolio-oriented local implementation. The JWT signing secret in `.env.example` is explicitly development-only and must be replaced in any non-local environment. Access tokens are stored in browser `localStorage` to keep this phase understandable; this is convenient but JavaScript-accessible and therefore more exposed to cross-site scripting than an `HttpOnly`, `Secure` cookie design. Refresh-token rotation, password reset, email verification, login throttling, MFA, external OAuth providers, threaded replies, and moderation workflows are intentionally outside V2.3.
 
 CORS permits only the documented local Vite origins. Credentials are not enabled and tokens/passwords are not logged.
 
@@ -146,7 +199,7 @@ With the Compose stack running:
 docker compose exec backend pytest -q
 ```
 
-The integration suite checks database/PostGIS availability, health, exact layer counts, filters, detail lookup, the real PostGIS nearby query, registration/login, token authentication, Argon2 hashing, and all three role boundaries.
+The integration suite checks database/PostGIS availability, health, exact layer counts, filters, detail lookup, the real PostGIS nearby query, registration/login, token authentication, Argon2 hashing, all three role boundaries, comment ownership, rating upserts/aggregates, favorite uniqueness, and private favorite lists.
 
 ## Stop
 

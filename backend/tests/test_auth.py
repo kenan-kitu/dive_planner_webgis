@@ -118,7 +118,11 @@ def test_browser_cors_preflight_allows_auth_post() -> None:
     )
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:4173"
-    assert "POST" in response.headers["access-control-allow-methods"]
+    allowed_methods = response.headers["access-control-allow-methods"]
+    assert "POST" in allowed_methods
+    assert "PUT" in allowed_methods
+    assert "PATCH" in allowed_methods
+    assert "DELETE" in allowed_methods
 
 
 def test_invalid_password_is_rejected(fresh_email: str) -> None:

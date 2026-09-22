@@ -7,6 +7,8 @@ import { localizeDiveSiteEnrichment } from '../../utils/enrichment'
 import { getDiveSitePlanningDepths } from '../../utils/siteFiltering'
 import { DetailList, DetailSources, DetailText } from './DetailParts'
 import { PhotoGallery } from './PhotoGallery'
+import { CommunitySection } from '../Community/CommunitySection'
+import { getDiveSiteNumericId } from '../../utils/diveSiteId'
 
 interface DiveSiteDetailsProps {
   site: DiveSiteFeature
@@ -54,6 +56,7 @@ export function DiveSiteDetails({
   const matchesCertification =
     effectiveDepthLimit == null ||
     (depth.maximum != null && depth.maximum <= effectiveDepthLimit)
+  const siteId = getDiveSiteNumericId(site)
 
   return (
     <article className="rich-detail rich-detail--site" aria-labelledby="site-detail-title">
@@ -171,6 +174,7 @@ export function DiveSiteDetails({
         )}
         <small>{t.catalog.departureDisclaimer}</small>
       </section>
+      {siteId != null ? <CommunitySection siteId={siteId} /> : null}
       {localizedEnrichment && <DetailSources sources={localizedEnrichment.sources} />}
     </article>
   )

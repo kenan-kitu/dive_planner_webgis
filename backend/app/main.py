@@ -5,6 +5,7 @@ from sqlalchemy import Float, cast, func, select, text
 from sqlalchemy.orm import Session
 
 from app.auth.routes import router as auth_router
+from app.community.routes import router as community_router
 from app.config import get_settings
 from app.database import get_db
 from app.geojson import collection, feature_from_record
@@ -12,15 +13,16 @@ from app.models import DeparturePoint, DiveCenter, DiveSite
 from app.schemas import GeoJSONFeature, GeoJSONFeatureCollection, HealthResponse
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version="2.1.0")
+app = FastAPI(title=settings.app_name, version="2.3.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["*"],
 )
 app.include_router(auth_router)
+app.include_router(community_router)
 
 
 def point_columns(model: type) -> tuple:

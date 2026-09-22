@@ -1,47 +1,37 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useLanguage } from '../../i18n/LanguageContext'
-import {
-  getCurrentUser,
-  loginAccount,
-  registerAccount,
-  type AuthUser,
-  type UserRole,
-} from '../../services/auth'
+import type { UserRole } from '../../services/auth'
+import { FavoriteSitesDialog } from './FavoriteSitesDialog'
+import { useAuth } from './AuthContext'
 
-const TOKEN_STORAGE_KEY = 'dive-planner-access-token'
+interface AuthControlsProps {
+  onSelectFavorite: (siteId: number) => void
+}
 
-type AuthMode = 'login' | 'register'
-
-export function AuthControls() {
+export function AuthControls({ onSelectFavorite }: AuthControlsProps) {
   const { t } = useLanguage()
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [mode, setMode] = useState<AuthMode | null>(null)
+  const {
+    user,
+    authMode: mode,
+    openSignIn,
+    openRegister,
+    closeAuth,
+    openFavorites,
+    signIn,
+    register,
+    signOut,
+  } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY)
-    if (!token) return
-
-    getCurrentUser(token)
-      .then(setUser)
-      .catch(() => localStorage.removeItem(TOKEN_STORAGE_KEY))
-  }, [])
-
   const closeDialog = () => {
-    setMode(null)
+    closeAuth()
     setError(null)
     setPassword('')
-  }
-
-  const signOut = () => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY)
-    setUser(null)
-    closeDialog()
   }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -52,15 +42,14 @@ export function AuthControls() {
     setError(null)
     try {
       if (mode === 'register') {
-        await registerAccount({
+        await register({
           email,
           password,
           display_name: displayName,
         })
+      } else {
+        await signIn(email, password)
       }
-      const result = await loginAccount(email, password)
-      localStorage.setItem(TOKEN_STORAGE_KEY, result.access_token)
-      setUser(result.user)
       setEmail('')
       setDisplayName('')
       closeDialog()
@@ -146,7 +135,8 @@ export function AuthControls() {
               className="auth-dialog__switch"
               type="button"
               onClick={() => {
-                setMode(mode === 'login' ? 'register' : 'login')
+                if (mode === 'login') openRegister()
+                else openSignIn()
                 setError(null)
               }}
             >
@@ -166,17 +156,27 @@ export function AuthControls() {
             <strong>{user.display_name}</strong>
             <span>{roleLabel(user.role)}</span>
           </div>
+          <button
+            className="auth-button auth-button--quiet auth-button--favorites"
+            type="button"
+            onClick={openFavorites}
+            aria-label={t.community.myFavorites}
+          >
+            <span aria-hidden="true">♥</span>
+            <span className="auth-button__label">{t.community.myFavorites}</span>
+          </button>
           <button className="auth-button auth-button--quiet" type="button" onClick={signOut}>
             {t.auth.signOut}
           </button>
         </>
       ) : (
-        <button className="auth-button" type="button" onClick={() => setMode('login')}>
+        <button className="auth-button" type="button" onClick={openSignIn}>
           {t.auth.signIn}
         </button>
       )}
 
       {authDialog}
+      <FavoriteSitesDialog onSelectSite={onSelectFavorite} />
     </div>
   )
 }

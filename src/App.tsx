@@ -43,6 +43,7 @@ import type {
   DiveCenterFeature,
   DiveSiteCollection,
 } from './types/gis'
+import { getDiveSiteNumericId } from './utils/diveSiteId'
 import {
   getEffectiveDepthLimit,
   type DiverProfile as DiverProfileValue,
@@ -469,6 +470,18 @@ function App() {
     setIsDesktopDetailPanelOpen(true)
   }, [])
 
+  const selectFavoriteDiveSite = useCallback((siteId: number) => {
+    const site = diveSites?.features.find(
+      (candidate) => getDiveSiteNumericId(candidate) === siteId,
+    )
+    if (!site) return
+    window.sessionStorage.setItem(SESSION_GOAL_KEY, 'exploreSite')
+    setUserGoal('exploreSite')
+    setShowFullControls(false)
+    setIsOpeningExperienceOpen(false)
+    selectDiveSite(site)
+  }, [diveSites, selectDiveSite])
+
   const selectDiveCenter = useCallback((center: DiveCenterFeature) => {
     setSelectedDiveCenter(center)
     setCatalogView('list')
@@ -786,7 +799,7 @@ function App() {
           <h1>{t.app.title}</h1>
         </div>
         <div className="topbar__actions">
-          <AuthControls />
+          <AuthControls onSelectFavorite={selectFavoriteDiveSite} />
           <LanguageSwitcher />
           <div className="phase-badge">{t.app.phase}</div>
         </div>
