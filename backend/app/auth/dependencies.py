@@ -21,11 +21,13 @@ def authentication_error() -> HTTPException:
     )
 
 
-def get_current_user(
+def get_optional_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     db: Annotated[Session, Depends(get_db)],
-) -> User:
-    if credentials is None or credentials.scheme.lower() != "bearer":
+) -> User | None:
+    if credentials is None:
+        return None
+    if credentials.scheme.lower() != "bearer":
         raise authentication_error()
 
     try:
@@ -42,6 +44,15 @@ def get_current_user(
             detail="User account is inactive",
         )
     return user
+
+
+OptionalCurrentUser = Annotated[User | None, Depends(get_optional_current_user)]
+
+
+def get_current_user(current_user: OptionalCurrentUser) -> User:
+    if current_user is None:
+        raise authentication_error()
+    return current_user
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

@@ -2872,6 +2872,331 @@ select {
   cursor: pointer;
 }
 
+.auth-button--favorites {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.auth-button--favorites > span:first-child {
+  color: #f0bd52;
+  font-size: 0.9rem;
+}
+
+.favorites-dialog {
+  max-height: min(680px, calc(100vh - 36px));
+  overflow-y: auto;
+}
+
+.favorites-dialog__empty {
+  margin: 0;
+  padding: 16px;
+  color: #58727a;
+  text-align: center;
+  border-radius: 10px;
+  background: #eaf4f4;
+}
+
+.favorites-dialog__list {
+  display: grid;
+  gap: 10px;
+}
+
+.favorites-dialog__list > button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 13px 14px;
+  color: #173643;
+  text-align: left;
+  border: 1px solid #b9d7d9;
+  border-radius: 11px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.favorites-dialog__list > button:hover {
+  border-color: #087483;
+  background: #edf8f8;
+}
+
+.favorites-dialog__list span,
+.favorites-dialog__list small {
+  color: #52757c;
+  font-size: 0.7rem;
+}
+
+.community-section {
+  display: grid;
+  gap: 16px;
+  border: 1px solid #b9d9db;
+  background: linear-gradient(145deg, #f8fcfc, #eef8f8);
+}
+
+.community-section__heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.community-section__heading .eyebrow {
+  margin: 0 0 4px;
+}
+
+.community-section__heading h3 {
+  margin: 0;
+}
+
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 10px;
+  color: #086d7b;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 1px solid #80c9cf;
+  border-radius: 9px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.favorite-button span {
+  color: #b33b52;
+  font-size: 1.05rem;
+}
+
+.favorite-button.is-active {
+  color: #7f2539;
+  border-color: #e3a5b2;
+  background: #fff1f4;
+}
+
+.community-status,
+.community-error {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.76rem;
+  border-radius: 9px;
+}
+
+.community-status {
+  color: #47676e;
+  background: #e5f2f2;
+}
+
+.community-error {
+  color: #8a2630;
+  background: #fde8ea;
+}
+
+.community-rating {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 13px;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgb(10 69 77 / 7%);
+}
+
+.community-rating > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.community-rating > div:first-child span {
+  color: #58727a;
+  font-size: 0.75rem;
+}
+
+.community-rating fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.community-rating legend {
+  margin-bottom: 4px;
+  color: #46656d;
+  font-size: 0.66rem;
+  font-weight: 750;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.rating-stars button {
+  width: 30px;
+  height: 34px;
+  padding: 0;
+  color: #a8b9bc;
+  font-size: 1.35rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rating-stars button:hover,
+.rating-stars button:focus-visible,
+.rating-stars button.is-selected {
+  color: #e4a820;
+}
+
+.rating-stars button:focus-visible,
+.favorite-button:focus-visible,
+.comment-form button:focus-visible,
+.comment-card button:focus-visible {
+  outline: 3px solid #f0bd52;
+  outline-offset: 2px;
+}
+
+.rating-remove {
+  padding: 3px 0;
+  color: #627b81;
+  font-size: 0.65rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.community-sign-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  color: #355b63;
+  font-size: 0.74rem;
+  border: 1px dashed #8ebfc3;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.community-sign-in button,
+.comment-form > button,
+.comment-edit button {
+  min-height: 34px;
+  padding: 6px 10px;
+  color: #fff;
+  font-weight: 800;
+  border: 0;
+  border-radius: 8px;
+  background: #087483;
+  cursor: pointer;
+}
+
+.comment-form {
+  display: grid;
+  gap: 8px;
+}
+
+.comment-form label,
+.community-comments h4 {
+  margin: 0;
+  color: #244d56;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.comment-form textarea,
+.comment-edit textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 10px;
+  color: #173643;
+  font: inherit;
+  resize: vertical;
+  border: 1px solid #abc9cc;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.comment-form > button {
+  justify-self: end;
+}
+
+.comment-form > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.community-comments {
+  display: grid;
+  gap: 10px;
+}
+
+.community-comments > p {
+  margin: 0;
+  color: #607b81;
+  font-size: 0.76rem;
+}
+
+.comment-card {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid #d2e3e4;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.comment-card header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.comment-card header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.comment-card header span,
+.comment-card time {
+  color: #6b858a;
+  font-size: 0.64rem;
+}
+
+.comment-card p {
+  margin: 0;
+  color: #274c54;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.comment-card footer,
+.comment-edit > div {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-card footer button {
+  padding: 3px 0;
+  color: #087483;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.comment-card footer button:last-child {
+  color: #9a3045;
+}
+
+.comment-edit {
+  display: grid;
+  gap: 8px;
+}
+
 .map-symbol--wreck {
   color: #fff;
   border-radius: 8px;
@@ -3618,6 +3943,28 @@ footer strong {
   .auth-button--quiet {
     padding-inline: 6px;
     font-size: 0.66rem;
+  }
+
+  .auth-button__label {
+    display: none;
+  }
+
+  .community-section__heading,
+  .community-rating,
+  .community-sign-in {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .community-section__heading,
+  .community-sign-in {
+    flex-direction: column;
+  }
+
+  .favorite-button,
+  .community-sign-in button {
+    justify-content: center;
+    width: 100%;
   }
 
   .language-switcher button {
