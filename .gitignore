@@ -3,6 +3,10 @@ dist
 .vite
 *.local
 *.log
+.env
+__pycache__/
+.pytest_cache/
+*.py[cod]
 
 # Local Netlify folder
 .netlify

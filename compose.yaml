@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgis/postgis:16-3.5
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dive_planner}
+      POSTGRES_USER: ${POSTGRES_USER:-dive_planner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dive_planner_local}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://dive_planner:dive_planner_local@db:5432/dive_planner}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:4173,http://localhost:4173,http://127.0.0.1:5173,http://localhost:5173}
+      GEOPACKAGE_PATH: ${GEOPACKAGE_PATH:-/data/dive_planner_data.gpkg}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./geoserver/data/dive_planner_data.gpkg:/data/dive_planner_data.gpkg:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >-
+      sh -c "alembic upgrade head &&
+      python -m scripts.import_geopackage --if-empty &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  postgis_data:

@@ -1,0 +1,11 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+SQLAlchemy==2.0.43
+GeoAlchemy2==0.18.0
+psycopg[binary]==3.2.10
+pydantic-settings==2.10.1
+alembic==1.16.5
+Fiona==1.10.1
+Shapely==2.1.1
+pytest==8.4.2
+httpx==0.28.1
