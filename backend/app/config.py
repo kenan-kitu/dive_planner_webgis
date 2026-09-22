@@ -13,6 +13,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173,http://localhost:5173"
     )
     geopackage_path: str = "/data/dive_planner_data.gpkg"
+    jwt_secret: str = "development-only-change-this-jwt-secret"
+    jwt_access_token_minutes: int = 30
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
