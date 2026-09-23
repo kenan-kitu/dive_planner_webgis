@@ -115,6 +115,8 @@ class DiveCenterProfileRequest(BaseModel):
     phone: str | None = Field(default=None, max_length=100)
     website: str | None = Field(default=None, max_length=500)
     address: str | None = Field(default=None, max_length=500)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
     agencies: list[str] = Field(default_factory=list, max_length=30)
     services: list[str] = Field(default_factory=list, max_length=30)
 
@@ -147,6 +149,12 @@ class DiveCenterProfileRequest(BaseModel):
             if item and item not in cleaned:
                 cleaned.append(item)
         return cleaned
+
+    @model_validator(mode="after")
+    def validate_location_pair(self) -> "DiveCenterProfileRequest":
+        if (self.longitude is None) != (self.latitude is None):
+            raise ValueError("Longitude and latitude must be supplied together")
+        return self
 
 
 class DiveCenterProfileResponse(DiveCenterProfileRequest):
@@ -257,3 +265,4 @@ class AdminDashboardResponse(BaseModel):
     pending_submissions: int
     approved_submissions: int
     rejected_submissions: int
+    archived_submissions: int

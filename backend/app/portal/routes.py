@@ -43,6 +43,31 @@ def profile_for_user(db: Session, user_id: int) -> DiveCenterProfile | None:
     )
 
 
+def profile_response(db: Session, profile: DiveCenterProfile) -> DiveCenterProfileResponse:
+    longitude, latitude = db.execute(
+        select(
+            func.ST_X(DiveCenterProfile.geom),
+            func.ST_Y(DiveCenterProfile.geom),
+        ).where(DiveCenterProfile.id == profile.id)
+    ).one()
+    return DiveCenterProfileResponse(
+        id=profile.id,
+        user_id=profile.user_id,
+        business_name=profile.business_name,
+        description=profile.description,
+        phone=profile.phone,
+        website=profile.website,
+        address=profile.address,
+        longitude=longitude,
+        latitude=latitude,
+        agencies=profile.agencies,
+        services=profile.services,
+        is_verified=profile.is_verified,
+        created_at=profile.created_at,
+        updated_at=profile.updated_at,
+    )
+
+
 def submission_statement():
     longitude = func.ST_X(DiveSiteSubmission.geom).label("longitude")
     latitude = func.ST_Y(DiveSiteSubmission.geom).label("latitude")
@@ -102,11 +127,11 @@ def require_pending_owner(submission: DiveSiteSubmission, current_user: User) ->
 def get_profile(
     current_user: DiveCenterUser,
     db: Annotated[Session, Depends(get_db)],
-) -> DiveCenterProfile:
+) -> DiveCenterProfileResponse:
     profile = profile_for_user(db, current_user.id)
     if profile is None:
         raise HTTPException(status_code=404, detail="Dive center profile not created")
-    return profile
+    return profile_response(db, profile)
 
 
 @router.put("/api/dive-center/profile", response_model=DiveCenterProfileResponse)
@@ -115,18 +140,24 @@ def upsert_profile(
     payload: DiveCenterProfileRequest,
     current_user: DiveCenterUser,
     db: Annotated[Session, Depends(get_db)],
-) -> DiveCenterProfile:
+) -> DiveCenterProfileResponse:
     profile = profile_for_user(db, current_user.id)
-    values = payload.model_dump()
+    values = payload.model_dump(exclude={"longitude", "latitude"})
+    location = (
+        WKTElement(f"POINT({payload.longitude} {payload.latitude})", srid=4326)
+        if payload.longitude is not None and payload.latitude is not None
+        else None
+    )
     if profile is None:
-        profile = DiveCenterProfile(user_id=current_user.id, **values)
+        profile = DiveCenterProfile(user_id=current_user.id, geom=location, **values)
         db.add(profile)
     else:
         for key, value in values.items():
             setattr(profile, key, value)
+        profile.geom = location
     db.commit()
     db.refresh(profile)
-    return profile
+    return profile_response(db, profile)
 
 
 @router.post(
@@ -285,6 +316,11 @@ def admin_dashboard(
                 DiveSiteSubmission.status == SubmissionStatus.REJECTED
             )
         ),
+        archived_submissions=count(
+            select(func.count()).select_from(DiveSiteSubmission).where(
+                DiveSiteSubmission.status == SubmissionStatus.ARCHIVED
+            )
+        ),
     )
 
 
@@ -334,7 +370,7 @@ def admin_dive_centers(
     ).all()
     return [
         AdminDiveCenterProfileResponse(
-            **DiveCenterProfileResponse.model_validate(profile).model_dump(),
+            **profile_response(db, profile).model_dump(),
             email=email,
             display_name=display_name,
         )
@@ -364,7 +400,7 @@ def verify_dive_center(
     db.commit()
     db.refresh(profile)
     return AdminDiveCenterProfileResponse(
-        **DiveCenterProfileResponse.model_validate(profile).model_dump(),
+        **profile_response(db, profile).model_dump(),
         email=email,
         display_name=display_name,
     )
@@ -461,3 +497,25 @@ def reject_submission(
     return review_submission(
         db, submission_id, current_admin, SubmissionStatus.REJECTED, payload.admin_note
     )
+
+
+@router.post(
+    "/api/admin/submissions/{submission_id}/archive",
+    response_model=DiveSiteSubmissionResponse,
+)
+def archive_submission(
+    submission_id: int,
+    payload: SubmissionReviewRequest,
+    current_admin: AdminUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> DiveSiteSubmissionResponse:
+    submission = load_submission_row(db, submission_id)[0]
+    if submission.status != SubmissionStatus.APPROVED:
+        raise HTTPException(status_code=409, detail="Only approved submissions may be archived")
+    submission.status = SubmissionStatus.ARCHIVED
+    if payload.admin_note is not None:
+        submission.admin_note = payload.admin_note
+    submission.reviewed_by = current_admin.id
+    submission.reviewed_at = datetime.now(timezone.utc)
+    db.commit()
+    return submission_response(load_submission_row(db, submission.id))

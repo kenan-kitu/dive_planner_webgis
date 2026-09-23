@@ -45,6 +45,8 @@ export interface DiveCenterProfileInput {
   phone: string | null
   website: string | null
   address: string | null
+  longitude: number | null
+  latitude: number | null
   agencies: string[]
   services: string[]
 }
@@ -57,7 +59,7 @@ export interface DiveCenterProfile extends DiveCenterProfileInput {
   updated_at: string
 }
 
-export type SubmissionStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type SubmissionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'ARCHIVED'
 
 export interface DiveSiteSubmissionInput {
   name: string
@@ -89,6 +91,7 @@ export interface AdminDashboard {
   pending_submissions: number
   approved_submissions: number
   rejected_submissions: number
+  archived_submissions: number
 }
 
 export interface AdminUser extends AuthUser {
@@ -234,6 +237,18 @@ export function reviewSubmission(
 ): Promise<DiveSiteSubmission> {
   return request(
     `/api/admin/submissions/${id}/${decision}`,
+    { method: 'POST', body: JSON.stringify({ admin_note: adminNote || null }) },
+    token,
+  )
+}
+
+export function archiveSubmission(
+  id: number,
+  adminNote: string,
+  token: string,
+): Promise<DiveSiteSubmission> {
+  return request(
+    `/api/admin/submissions/${id}/archive`,
     { method: 'POST', body: JSON.stringify({ admin_note: adminNote || null }) },
     token,
   )

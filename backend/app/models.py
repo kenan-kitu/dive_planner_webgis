@@ -31,6 +31,7 @@ class SubmissionStatus(str, Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
+    ARCHIVED = "ARCHIVED"
 
 
 class User(Base):
@@ -193,6 +194,10 @@ class DiveCenterProfile(Base):
     phone: Mapped[str | None] = mapped_column(String(100))
     website: Mapped[str | None] = mapped_column(String(500))
     address: Mapped[str | None] = mapped_column(String(500))
+    geom: Mapped[object | None] = mapped_column(
+        Geometry("POINT", srid=4326, spatial_index=False),
+        nullable=True,
+    )
     agencies: Mapped[list[str]] = mapped_column(JSON, default=list)
     services: Mapped[list[str]] = mapped_column(JSON, default=list)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -31,6 +31,8 @@ const EMPTY_PROFILE: DiveCenterProfileInput = {
   phone: null,
   website: null,
   address: null,
+  longitude: null,
+  latitude: null,
   agencies: [],
   services: [],
 }
@@ -57,14 +59,24 @@ function MapClick({ onChange }: { onChange: (coordinates: Coordinates) => void }
 function LocationPicker({
   coordinates,
   onChange,
+  ariaLabel,
 }: {
   coordinates: Coordinates | null
   onChange: (coordinates: Coordinates) => void
+  ariaLabel: string
 }) {
   const satellite = BASEMAPS.satellite
+  const center: [number, number] = coordinates
+    ? [coordinates[1], coordinates[0]]
+    : [24.72, -81.1]
   return (
-    <div className="portal-map" role="region" aria-label="Submission location map">
-      <MapContainer center={[24.72, -81.1]} zoom={8} scrollWheelZoom>
+    <div className="portal-map" role="region" aria-label={ariaLabel}>
+      <MapContainer
+        key={coordinates ? `${coordinates[0]}-${coordinates[1]}` : 'default'}
+        center={center}
+        zoom={coordinates ? 11 : 8}
+        scrollWheelZoom
+      >
         <TileLayer
           attribution={satellite.attribution}
           url={satellite.url}
@@ -130,6 +142,8 @@ export function DiveCenterPortal({ open, onClose }: DiveCenterPortalProps) {
             phone: nextProfile.phone,
             website: nextProfile.website,
             address: nextProfile.address,
+            longitude: nextProfile.longitude,
+            latitude: nextProfile.latitude,
             agencies: nextProfile.agencies,
             services: nextProfile.services,
           })
@@ -307,6 +321,38 @@ export function DiveCenterPortal({ open, onClose }: DiveCenterPortalProps) {
                 {t.portal.address}
                 <input maxLength={500} value={profileForm.address ?? ''} onChange={(event) => setProfileForm((current) => ({ ...current, address: event.target.value || null }))} />
               </label>
+              <div className="profile-location field-span">
+                <div className="section-heading">
+                  <div><small>{t.portal.location}</small><h3>{t.portal.businessLocation}</h3></div>
+                </div>
+                <p>{t.portal.businessLocationHelp}</p>
+                <LocationPicker
+                  ariaLabel={t.portal.businessLocationMap}
+                  coordinates={
+                    profileForm.longitude != null && profileForm.latitude != null
+                      ? [profileForm.longitude, profileForm.latitude]
+                      : null
+                  }
+                  onChange={([longitude, latitude]) =>
+                    setProfileForm((current) => ({ ...current, longitude, latitude }))
+                  }
+                />
+                <div className="coordinate-row">
+                  <output className="coordinate-output">
+                    {profileForm.longitude != null && profileForm.latitude != null
+                      ? `${profileForm.latitude.toFixed(6)}, ${profileForm.longitude.toFixed(6)}`
+                      : t.portal.noBusinessLocation}
+                  </output>
+                  {profileForm.longitude != null ? (
+                    <button
+                      type="button"
+                      onClick={() => setProfileForm((current) => ({ ...current, longitude: null, latitude: null }))}
+                    >
+                      {t.portal.clearLocation}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
               <label>
                 {t.portal.agencies}
                 <input value={agenciesText} onChange={(event) => setAgenciesText(event.target.value)} placeholder="PADI, SSI, CMAS" />
@@ -342,6 +388,9 @@ export function DiveCenterPortal({ open, onClose }: DiveCenterPortalProps) {
                     <div><dt>{t.details.depth}</dt><dd>{submission.min_depth_m ?? '—'}–{submission.max_depth_m ?? '—'} m</dd></div>
                   </dl>
                   {submission.admin_note ? <p className="admin-note"><strong>{t.portal.adminNote}:</strong> {submission.admin_note}</p> : null}
+                  {submission.status === 'APPROVED' ? (
+                    <p className="management-message">{t.portal.approvedRemovalNotice}</p>
+                  ) : null}
                   {submission.status === 'PENDING' ? (
                     <footer>
                       <button type="button" onClick={() => editSubmission(submission)}>{t.community.edit}</button>
@@ -358,7 +407,11 @@ export function DiveCenterPortal({ open, onClose }: DiveCenterPortalProps) {
               <div className="submission-map-column">
                 <div className="section-heading"><div><small>{t.portal.location}</small><h3>{t.portal.chooseOnMap}</h3></div></div>
                 <p>{t.portal.mapHelp}</p>
-                <LocationPicker coordinates={coordinates} onChange={setCoordinates} />
+                <LocationPicker
+                  ariaLabel={t.portal.submissionLocationMap}
+                  coordinates={coordinates}
+                  onChange={setCoordinates}
+                />
                 <output className="coordinate-output">
                   {coordinates ? `${coordinates[1].toFixed(6)}, ${coordinates[0].toFixed(6)}` : t.portal.noLocation}
                 </output>

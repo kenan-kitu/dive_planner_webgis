@@ -130,7 +130,7 @@ Role examples:
 
 Migration `20260922_0004` creates:
 
-- `dive_center_profiles`: one profile per `DIVE_CENTER` user through a unique `user_id` foreign key. Business information is separate from authentication fields. `is_verified` is only an application-level status.
+- `dive_center_profiles`: one profile per `DIVE_CENTER` user through a unique `user_id` foreign key. Business information is separate from authentication fields. An optional PostGIS `geometry(Point, 4326)` stores the map-picked business location independently from the address text. `is_verified` is only an application-level status.
 - `dive_site_submissions`: a PostGIS `geometry(Point, 4326)` proposal with a GiST index, owner, depth validation, review state, reviewer, timestamp, and optional admin note.
 
 Profile endpoints (`DIVE_CENTER` only):
@@ -169,8 +169,9 @@ The Admin Panel is an application UI, not a database-management tool. Its API en
 - `GET /api/admin/submissions?status=PENDING`
 - `POST /api/admin/submissions/{id}/approve`
 - `POST /api/admin/submissions/{id}/reject`
+- `POST /api/admin/submissions/{id}/archive` — unpublishes an approved contribution without deleting its history
 
-Public registration still creates only `USER`. The management endpoint cannot create or assign `ADMIN`, cannot modify an existing admin account, and prevents the current admin from disabling or changing itself. Approval stores the reviewer and review time. Rejection exposes the optional admin note only to the submission owner and administrators.
+Public registration still creates only `USER`. The management endpoint cannot create or assign `ADMIN`, cannot modify an existing admin account, and prevents the current admin from disabling or changing itself. Approval stores the reviewer and review time. Rejection exposes the optional admin note only to the submission owner and administrators. `ARCHIVED` submissions remain visible to their owner and administrators but are excluded from the public community GeoJSON.
 
 ## Comments, ratings, and favorites
 
@@ -245,6 +246,16 @@ DEV_USER_EMAIL / DEV_USER_PASSWORD / DEV_USER_DISPLAY_NAME
 DEV_DIVE_CENTER_EMAIL / DEV_DIVE_CENTER_PASSWORD / DEV_DIVE_CENTER_DISPLAY_NAME
 DEV_ADMIN_EMAIL / DEV_ADMIN_PASSWORD / DEV_ADMIN_DISPLAY_NAME
 ```
+
+Use development-only addresses such as:
+
+```text
+DEV_USER_EMAIL=diver@diveplanner.dev
+DEV_DIVE_CENTER_EMAIL=center@diveplanner.dev
+DEV_ADMIN_EMAIL=admin@diveplanner.dev
+```
+
+Set the three password variables only in your local shell or untracked `.env` file. Never commit development passwords.
 
 Then run:
 
