@@ -143,20 +143,35 @@ def test_user_cannot_access_dive_center_or_admin_apis() -> None:
 def test_dive_center_profile_is_one_per_account_and_role_protected() -> None:
     headers = auth("center")
     assert client.get("/api/dive-center/profile", headers=headers).status_code == 404
+    incomplete_location = profile_payload()
+    incomplete_location["longitude"] = -80.12
+    assert client.put(
+        "/api/dive-center/profile", headers=headers, json=incomplete_location
+    ).status_code == 422
     created = client.put(
         "/api/dive-center/profile", headers=headers, json=profile_payload()
     )
     assert created.status_code == 200
     assert created.json()["is_verified"] is False
+    assert created.json()["longitude"] is None
+    assert created.json()["latitude"] is None
+    located_payload = profile_payload("Updated Test Dive Center")
+    located_payload.update({"longitude": -80.12, "latitude": 25.08})
     updated = client.patch(
         "/api/dive-center/profile",
         headers=headers,
-        json=profile_payload("Updated Test Dive Center"),
+        json=located_payload,
     )
     assert updated.status_code == 200
     assert updated.json()["id"] == created.json()["id"]
+    assert updated.json()["longitude"] == pytest.approx(-80.12)
+    assert updated.json()["latitude"] == pytest.approx(25.08)
     with SessionLocal() as session:
-        assert session.scalar(select(func.count()).select_from(DiveCenterProfile)) == 1
+        assert session.scalar(
+            select(func.count())
+            .select_from(DiveCenterProfile)
+            .where(DiveCenterProfile.user_id == user_id("center"))
+        ) == 1
 
 
 @pytest.mark.parametrize(
@@ -252,7 +267,9 @@ def test_admin_user_management_safeguards() -> None:
 def test_complete_promotion_profile_review_publication_and_moderation_flow() -> None:
     official_count_before = len(client.get("/api/dive-sites").json()["features"])
     assert official_count_before == 63
+    public_before = client.get("/api/community/dive-sites").json()["features"]
     admin_headers = auth("admin")
+    dashboard_before = client.get("/api/admin/dashboard", headers=admin_headers).json()
     promoted_user_id = user_id("user")
 
     promoted = client.patch(
@@ -284,7 +301,7 @@ def test_complete_promotion_profile_review_publication_and_moderation_flow() -> 
     )
     assert pending.status_code == 201
     assert pending.json()["status"] == "PENDING"
-    assert client.get("/api/community/dive-sites").json()["features"] == []
+    assert client.get("/api/community/dive-sites").json()["features"] == public_before
 
     admin_queue = client.get(
         "/api/admin/submissions?status=PENDING", headers=admin_headers
@@ -305,10 +322,30 @@ def test_complete_promotion_profile_review_publication_and_moderation_flow() -> 
     ).status_code == 409
 
     public_features = client.get("/api/community/dive-sites").json()["features"]
-    assert len(public_features) == 1
-    assert public_features[0]["properties"]["site_name"] == "Approved Community Reef"
-    assert public_features[0]["properties"]["business_name"] == "Promoted User Dive Center"
-    assert public_features[0]["properties"]["data_origin"] == "dive_center_submitted"
+    assert len(public_features) == len(public_before) + 1
+    published = next(item for item in public_features if item["id"] == pending.json()["id"])
+    assert published["properties"]["site_name"] == "Approved Community Reef"
+    assert published["properties"]["business_name"] == "Promoted User Dive Center"
+    assert published["properties"]["data_origin"] == "dive_center_submitted"
+
+    archived = client.post(
+        f"/api/admin/submissions/{pending.json()['id']}/archive",
+        headers=admin_headers,
+        json={"admin_note": "Unpublished while preserving contribution history."},
+    )
+    assert archived.status_code == 200
+    assert archived.json()["status"] == "ARCHIVED"
+    assert client.get("/api/community/dive-sites").json()["features"] == public_before
+    assert client.delete(
+        f"/api/dive-center/submissions/{pending.json()['id']}",
+        headers=center_headers,
+    ).status_code == 409
+    owner_archived = client.get(
+        "/api/dive-center/submissions", headers=center_headers
+    ).json()
+    assert next(item for item in owner_archived if item["id"] == pending.json()["id"])[
+        "status"
+    ] == "ARCHIVED"
 
     rejected_pending = client.post(
         "/api/dive-center/submissions",
@@ -327,7 +364,7 @@ def test_complete_promotion_profile_review_publication_and_moderation_flow() -> 
     ).json()
     rejected_owner_view = next(item for item in own_submissions if item["status"] == "REJECTED")
     assert rejected_owner_view["admin_note"] == "Location evidence is insufficient."
-    assert len(client.get("/api/community/dive-sites").json()["features"]) == 1
+    assert client.get("/api/community/dive-sites").json()["features"] == public_before
 
     comment = client.post(
         "/api/dive-sites/1/comments",
@@ -343,8 +380,9 @@ def test_complete_promotion_profile_review_publication_and_moderation_flow() -> 
 
     dashboard = client.get("/api/admin/dashboard", headers=admin_headers)
     assert dashboard.status_code == 200
-    assert dashboard.json()["approved_submissions"] == 1
-    assert dashboard.json()["rejected_submissions"] == 1
+    assert dashboard.json()["approved_submissions"] == dashboard_before["approved_submissions"]
+    assert dashboard.json()["rejected_submissions"] == dashboard_before["rejected_submissions"] + 1
+    assert dashboard.json()["archived_submissions"] == dashboard_before["archived_submissions"] + 1
     assert len(client.get("/api/dive-sites").json()["features"]) == 63
 
 

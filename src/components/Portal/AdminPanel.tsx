@@ -4,6 +4,7 @@ import { CircleMarker, MapContainer, TileLayer } from 'react-leaflet'
 import { BASEMAPS } from '../../config/mapStyles'
 import { useLanguage } from '../../i18n/LanguageContext'
 import {
+  archiveSubmission,
   deleteAdminComment,
   getAdminDashboard,
   listAdminComments,
@@ -36,10 +37,11 @@ const EMPTY_DASHBOARD: AdminDashboard = {
   pending_submissions: 0,
   approved_submissions: 0,
   rejected_submissions: 0,
+  archived_submissions: 0,
 }
 
 async function fetchAdminData(token: string) {
-  return Promise.all([
+  return Promise.allSettled([
     getAdminDashboard(token),
     listAdminUsers(token),
     listAdminDiveCenters(token),
@@ -86,16 +88,24 @@ export function AdminPanel({ open, onClose, onCommunityChanged }: AdminPanelProp
   const [loading, setLoading] = useState(false)
   const [workingId, setWorkingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [sectionErrors, setSectionErrors] = useState<Partial<Record<AdminTab, string>>>({})
 
   const applyAdminData = (
     data: Awaited<ReturnType<typeof fetchAdminData>>,
   ) => {
     const [nextDashboard, nextUsers, nextCenters, nextComments, nextSubmissions] = data
-    setDashboard(nextDashboard)
-    setUsers(nextUsers)
-    setCenters(nextCenters)
-    setComments(nextComments)
-    setSubmissions(nextSubmissions)
+    const nextErrors: Partial<Record<AdminTab, string>> = {}
+    if (nextDashboard.status === 'fulfilled') setDashboard(nextDashboard.value)
+    else nextErrors.dashboard = t.portal.loadFailed
+    if (nextUsers.status === 'fulfilled') setUsers(nextUsers.value)
+    else nextErrors.users = t.portal.loadFailed
+    if (nextCenters.status === 'fulfilled') setCenters(nextCenters.value)
+    else nextErrors.centers = t.portal.loadFailed
+    if (nextComments.status === 'fulfilled') setComments(nextComments.value)
+    else nextErrors.comments = t.portal.loadFailed
+    if (nextSubmissions.status === 'fulfilled') setSubmissions(nextSubmissions.value)
+    else nextErrors.submissions = t.portal.loadFailed
+    setSectionErrors(nextErrors)
   }
 
   useEffect(() => {
@@ -103,11 +113,11 @@ export function AdminPanel({ open, onClose, onCommunityChanged }: AdminPanelProp
     let active = true
     setLoading(true)
     setError(null)
+    setSectionErrors({})
     setNotes({})
     setInspectedId(null)
     fetchAdminData(token)
       .then((data) => active && applyAdminData(data))
-      .catch(() => active && setError(t.portal.loadFailed))
       .finally(() => active && setLoading(false))
     return () => {
       active = false
@@ -155,6 +165,13 @@ export function AdminPanel({ open, onClose, onCommunityChanged }: AdminPanelProp
     })
   }
 
+  const archive = (submission: DiveSiteSubmission) => {
+    void runAction(submission.id, async () => {
+      await archiveSubmission(submission.id, notes[submission.id] ?? '', token)
+      onCommunityChanged()
+    })
+  }
+
   const formatDate = (value: string) =>
     new Date(value).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US')
 
@@ -181,6 +198,7 @@ export function AdminPanel({ open, onClose, onCommunityChanged }: AdminPanelProp
         <div className="management-body">
           {loading ? <p>{t.status.loading}</p> : null}
           {error ? <p className="management-message is-error">{error}</p> : null}
+          {sectionErrors[tab] ? <p className="management-message is-error">{sectionErrors[tab]}</p> : null}
 
           {tab === 'dashboard' && !loading ? (
             <section aria-labelledby="admin-dashboard-heading">
@@ -192,6 +210,7 @@ export function AdminPanel({ open, onClose, onCommunityChanged }: AdminPanelProp
                 <article><strong>{dashboard.pending_submissions}</strong><span>{t.portal.status.PENDING}</span></article>
                 <article><strong>{dashboard.approved_submissions}</strong><span>{t.portal.status.APPROVED}</span></article>
                 <article><strong>{dashboard.rejected_submissions}</strong><span>{t.portal.status.REJECTED}</span></article>
+                <article><strong>{dashboard.archived_submissions}</strong><span>{t.portal.status.ARCHIVED}</span></article>
               </div>
             </section>
           ) : null}
@@ -252,6 +271,10 @@ export function AdminPanel({ open, onClose, onCommunityChanged }: AdminPanelProp
                   {submission.status === 'PENDING' ? <div className="review-actions">
                     <label>{t.portal.adminNote}<textarea value={notes[submission.id] ?? ''} onChange={(event) => setNotes((current) => ({ ...current, [submission.id]: event.target.value }))} /></label>
                     <div><button className="approve-action" type="button" disabled={workingId === submission.id} onClick={() => review(submission, 'approve')}>{t.portal.approve}</button><button className="reject-action" type="button" disabled={workingId === submission.id} onClick={() => review(submission, 'reject')}>{t.portal.reject}</button></div>
+                  </div> : null}
+                  {submission.status === 'APPROVED' ? <div className="review-actions">
+                    <label>{t.portal.adminNote}<textarea value={notes[submission.id] ?? ''} onChange={(event) => setNotes((current) => ({ ...current, [submission.id]: event.target.value }))} /></label>
+                    <div><button className="reject-action" type="button" disabled={workingId === submission.id} onClick={() => archive(submission)}>{t.portal.archive}</button></div>
                   </div> : null}
                 </article>
               ))}

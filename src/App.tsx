@@ -6,6 +6,7 @@ import { DiveMap } from './components/Map/DiveMap'
 import { DiveCenterDetails } from './components/Details/DiveCenterDetails'
 import { DiveSiteDetails } from './components/Details/DiveSiteDetails'
 import { DiveSiteCatalog } from './components/Catalog/DiveSiteCatalog'
+import { CommunityDiveSiteCatalog } from './components/Catalog/CommunityDiveSiteCatalog'
 import {
   DiveCenterCatalog,
   type CenterCatalogItem,
@@ -607,6 +608,15 @@ function App() {
     setIsDesktopDetailPanelOpen(false)
   }, [])
 
+  const closeMobileDetail = useCallback(() => {
+    if (selectedDiveCenter) {
+      setSelectedDiveCenter(null)
+    } else {
+      clearDetail()
+    }
+    setIsMobilePanelOpen(true)
+  }, [clearDetail, selectedDiveCenter])
+
   const openNearbyCenterJourney = useCallback(() => {
     setSelectedDiveCenter(null)
     setIsNearbyCenterJourneyOpen(true)
@@ -737,6 +747,12 @@ function App() {
   const shouldBackToCenterCatalog =
     selectedDiveCenter !== null &&
     (isNearbyCenterJourneyOpen || userGoal === 'findCenter')
+  const isMobileDetailOpen =
+    !isDesktopLayout &&
+    Boolean(
+      selectedDiveCenter ||
+      (selectedDiveSite && userGoal !== 'findCenter' && !isNearbyCenterJourneyOpen),
+    )
   let desktopJourneyCatalog: ReactNode = null
   if (!isFullPlanningView && !selectedDiveCenter) {
     if (userGoal === 'findSites' && siteMatchStep === 'results' && !selectedDiveSite) {
@@ -749,18 +765,25 @@ function App() {
         onSelect={selectDiveSite}
       />
     } else if (userGoal === 'exploreSite' && !selectedDiveSite) {
-      desktopJourneyCatalog = <DiveSiteCatalog
-        sites={exploredSites}
-        analysis={siteAnalysis}
-        selectedSite={selectedDiveSite}
-        boatSpeedKnots={boatSpeedKnots}
-        heading={t.catalog.exploreDiveSites}
-        search={siteCatalogSearch}
-        typeFilter={siteCatalogType}
-        onSearchChange={setSiteCatalogSearch}
-        onTypeFilterChange={setSiteCatalogType}
-        onSelect={selectDiveSite}
-      />
+      desktopJourneyCatalog = <>
+        <DiveSiteCatalog
+          sites={exploredSites}
+          analysis={siteAnalysis}
+          selectedSite={selectedDiveSite}
+          boatSpeedKnots={boatSpeedKnots}
+          heading={t.catalog.exploreDiveSites}
+          search={siteCatalogSearch}
+          typeFilter={siteCatalogType}
+          onSearchChange={setSiteCatalogSearch}
+          onTypeFilterChange={setSiteCatalogType}
+          onSelect={selectDiveSite}
+        />
+        <CommunityDiveSiteCatalog
+          collection={communityDiveSites}
+          search={siteCatalogSearch}
+          typeFilter={siteCatalogType}
+        />
+      </>
     } else if (userGoal === 'boatTrip' && boatTripStep === 'results' && !selectedDiveSite) {
       desktopJourneyCatalog = <DiveSiteCatalog
         sites={reachableSites}
@@ -842,30 +865,32 @@ function App() {
           <div className="mobile-panel-header">
             <div>
               <small>
-                {userGoal ? t.goals.currentGoal : t.planning.results}
+                {isMobileDetailOpen ? t.catalog.viewDetails : userGoal ? t.goals.currentGoal : t.planning.results}
               </small>
               <strong>
-                {userGoal
+                {isMobileDetailOpen
+                  ? selectedDiveCenter?.properties.name ?? selectedDiveSite?.properties.site_name
+                  : userGoal
                   ? t.goals.options[userGoal].title
                   : `${resultCounts.matching} ${t.planning.matchingDiveSites}`}
               </strong>
             </div>
             <button
               type="button"
-              aria-label={t.planning.closeFilters}
-              onClick={() => setIsMobilePanelOpen(false)}
+              aria-label={isMobileDetailOpen ? t.map.closeDetails : t.planning.closeFilters}
+              onClick={isMobileDetailOpen ? closeMobileDetail : () => setIsMobilePanelOpen(false)}
             >
               ×
             </button>
           </div>
 
           <div className="mobile-sheet__content">
-            {userGoal ? <div className="desktop-sidebar-heading">
+            {userGoal && !isMobileDetailOpen ? <div className="desktop-sidebar-heading">
               <p className="eyebrow">{t.planning.planning}</p>
               <h2>{t.app.shortTitle}</h2>
             </div> : null}
 
-            {userGoal ? (
+            {userGoal && !isMobileDetailOpen ? (
               <GoalHeader
                 goal={userGoal}
                 onChangeGoal={changeGoal}
@@ -874,7 +899,7 @@ function App() {
               />
             ) : null}
 
-            {!isFullPlanningView && userGoal && isJourneyResultsVisible ? (
+            {!isFullPlanningView && userGoal && isJourneyResultsVisible && !isMobileDetailOpen ? (
               <div className="catalog-view-toggle" role="group" aria-label={t.catalog.viewMode}>
                 <button
                   type="button"
@@ -1029,18 +1054,25 @@ function App() {
             ) : null}
 
             {!isDesktopLayout && !isFullPlanningView && userGoal === 'exploreSite' && !selectedDiveSite ? (
-              <DiveSiteCatalog
-                sites={exploredSites}
-                analysis={siteAnalysis}
-                selectedSite={selectedDiveSite}
-                boatSpeedKnots={boatSpeedKnots}
-                heading={t.catalog.exploreDiveSites}
-                search={siteCatalogSearch}
-                typeFilter={siteCatalogType}
-                onSearchChange={setSiteCatalogSearch}
-                onTypeFilterChange={setSiteCatalogType}
-                onSelect={selectDiveSite}
-              />
+              <>
+                <DiveSiteCatalog
+                  sites={exploredSites}
+                  analysis={siteAnalysis}
+                  selectedSite={selectedDiveSite}
+                  boatSpeedKnots={boatSpeedKnots}
+                  heading={t.catalog.exploreDiveSites}
+                  search={siteCatalogSearch}
+                  typeFilter={siteCatalogType}
+                  onSearchChange={setSiteCatalogSearch}
+                  onTypeFilterChange={setSiteCatalogType}
+                  onSelect={selectDiveSite}
+                />
+                <CommunityDiveSiteCatalog
+                  collection={communityDiveSites}
+                  search={siteCatalogSearch}
+                  typeFilter={siteCatalogType}
+                />
+              </>
             ) : null}
 
             {!isFullPlanningView && userGoal === 'boatTrip' && !selectedDiveSite ? (
@@ -1321,7 +1353,7 @@ function App() {
           aria-expanded={isMobilePanelOpen}
           onClick={showCatalogList}
         >
-          <span>{userGoal && isJourneyResultsVisible ? t.catalog.list : t.planning.openFilters}</span>
+          <span>{isMobileDetailOpen ? t.catalog.viewDetails : userGoal && isJourneyResultsVisible ? t.catalog.list : t.planning.openFilters}</span>
           {isJourneyResultsVisible ? <strong>{activeCatalogSites.length}</strong> : null}
         </button> : null}
       </main>

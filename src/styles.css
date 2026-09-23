@@ -630,6 +630,33 @@ select {
   box-shadow: 0 0 0 2px rgb(7 130 147 / 14%);
 }
 
+.catalog--community {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 2px solid #f0b34f;
+}
+
+.catalog-community-note {
+  margin: 0 0 12px;
+  color: #6b5a3d;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.catalog-card--community {
+  border-color: #efc676;
+  background: #fffdf7;
+}
+
+.catalog-card__community-mark {
+  display: grid;
+  min-height: 74px;
+  color: #9a4b12;
+  font-size: 1.8rem;
+  background: linear-gradient(145deg, #fff1c7, #fff9e9);
+  place-items: center;
+}
+
 .catalog-card__media {
   display: grid;
   min-height: 154px;
@@ -3149,6 +3176,40 @@ select {
   background: #e9f4f4;
 }
 
+.profile-location {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-location > p {
+  margin: 0;
+  color: #56747b;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.coordinate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.coordinate-row .coordinate-output {
+  flex: 1 1 auto;
+  margin-top: 0;
+}
+
+.coordinate-row button {
+  min-height: 40px;
+  padding: 8px 12px;
+  color: #285660;
+  border: 1px solid #9fc8cc;
+  border-radius: 9px;
+  background: #fff;
+  cursor: pointer;
+}
+
 .management-list {
   display: grid;
   gap: 12px;
@@ -3203,6 +3264,11 @@ select {
 .status-pill.is-rejected {
   color: #8b3037;
   background: #fde4e5;
+}
+
+.status-pill.is-archived {
+  color: #5b4675;
+  background: #eee7f6;
 }
 
 .compact-definitions {
