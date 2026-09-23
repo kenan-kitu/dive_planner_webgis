@@ -19,10 +19,10 @@ The browser uses same-origin `/api/...` and `/geoserver/...` URLs in production.
 `render.yaml` builds the existing `backend/Dockerfile`. Its production `CMD` has no reload flag and runs:
 
 ```sh
-alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}"
+python -m scripts.ensure_postgis && alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}"
 ```
 
-Render supplies `PORT`; `/health` is the health-check path. Enter these service variables manually:
+The first command idempotently enables PostGIS before Alembic runs. Render supplies `PORT`; `/health` is the health-check path. Enter these service variables manually:
 
 - `DATABASE_URL`: the Render PostgreSQL internal connection string, with the SQLAlchemy driver scheme `postgresql+psycopg://` instead of `postgresql://`.
 - `JWT_SECRET`: a new cryptographically random production secret. Do not reuse the local development value.
