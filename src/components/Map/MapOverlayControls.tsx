@@ -150,6 +150,10 @@ export function MapOverlayControls({
                   <span>{item.label}</span>
                 </div>
               ))}
+              <div>
+                <span className="map-legend__community" aria-hidden="true" />
+                <span>{t.map.communityDiveSite}</span>
+              </div>
             </div>
             <div className="map-legend__group">
               <strong>{t.map.otherPoints}</strong>

@@ -4,12 +4,18 @@ import { useLanguage } from '../../i18n/LanguageContext'
 import type { UserRole } from '../../services/auth'
 import { FavoriteSitesDialog } from './FavoriteSitesDialog'
 import { useAuth } from './AuthContext'
+import { AdminPanel } from '../Portal/AdminPanel'
+import { DiveCenterPortal } from '../Portal/DiveCenterPortal'
 
 interface AuthControlsProps {
   onSelectFavorite: (siteId: number) => void
+  onCommunityChanged: () => void
 }
 
-export function AuthControls({ onSelectFavorite }: AuthControlsProps) {
+export function AuthControls({
+  onSelectFavorite,
+  onCommunityChanged,
+}: AuthControlsProps) {
   const { t } = useLanguage()
   const {
     user,
@@ -27,6 +33,9 @@ export function AuthControls({ onSelectFavorite }: AuthControlsProps) {
   const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [managementView, setManagementView] = useState<
+    'dive-center' | 'admin' | null
+  >(null)
 
   const closeDialog = () => {
     closeAuth()
@@ -61,6 +70,11 @@ export function AuthControls({ onSelectFavorite }: AuthControlsProps) {
   }
 
   const roleLabel = (role: UserRole) => t.auth.roles[role]
+
+  const handleSignOut = () => {
+    setManagementView(null)
+    signOut()
+  }
 
   const authDialog = mode
     ? createPortal(
@@ -165,7 +179,29 @@ export function AuthControls({ onSelectFavorite }: AuthControlsProps) {
             <span aria-hidden="true">♥</span>
             <span className="auth-button__label">{t.community.myFavorites}</span>
           </button>
-          <button className="auth-button auth-button--quiet" type="button" onClick={signOut}>
+          {user.role === 'DIVE_CENTER' ? (
+            <button
+              className="auth-button auth-button--quiet auth-button--management"
+              type="button"
+              onClick={() => setManagementView('dive-center')}
+              aria-label={t.portal.diveCenterDashboard}
+            >
+              <span aria-hidden="true">⌂</span>
+              <span className="auth-button__label">{t.portal.diveCenterDashboard}</span>
+            </button>
+          ) : null}
+          {user.role === 'ADMIN' ? (
+            <button
+              className="auth-button auth-button--quiet auth-button--management"
+              type="button"
+              onClick={() => setManagementView('admin')}
+              aria-label={t.portal.adminPanel}
+            >
+              <span aria-hidden="true">⚙</span>
+              <span className="auth-button__label">{t.portal.adminPanel}</span>
+            </button>
+          ) : null}
+          <button className="auth-button auth-button--quiet" type="button" onClick={handleSignOut}>
             {t.auth.signOut}
           </button>
         </>
@@ -177,6 +213,15 @@ export function AuthControls({ onSelectFavorite }: AuthControlsProps) {
 
       {authDialog}
       <FavoriteSitesDialog onSelectSite={onSelectFavorite} />
+      <DiveCenterPortal
+        open={managementView === 'dive-center'}
+        onClose={() => setManagementView(null)}
+      />
+      <AdminPanel
+        open={managementView === 'admin'}
+        onClose={() => setManagementView(null)}
+        onCommunityChanged={onCommunityChanged}
+      />
     </div>
   )
 }

@@ -70,3 +70,7 @@ def require_roles(*allowed_roles: UserRole) -> Callable:
         return current_user
 
     return role_dependency
+
+
+DiveCenterUser = Annotated[User, Depends(require_roles(UserRole.DIVE_CENTER))]
+AdminUser = Annotated[User, Depends(require_roles(UserRole.ADMIN))]

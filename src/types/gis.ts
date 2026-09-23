@@ -18,6 +18,27 @@ export interface DiveSiteProperties {
 export type DiveSiteFeature = Feature<Point, DiveSiteProperties>
 export type DiveSiteCollection = FeatureCollection<Point, DiveSiteProperties>
 
+export interface CommunityDiveSiteProperties {
+  site_name: string
+  site_type: string
+  min_depth_m: number | null
+  max_depth_m: number | null
+  description: string
+  submitted_by: number
+  submitter_name: string
+  business_name: string | null
+  data_origin: 'dive_center_submitted'
+}
+
+export type CommunityDiveSiteFeature = Feature<
+  Point,
+  CommunityDiveSiteProperties
+>
+export type CommunityDiveSiteCollection = FeatureCollection<
+  Point,
+  CommunityDiveSiteProperties
+>
+
 export interface DiveSiteAnalysis {
   distanceNm: number | null
   matchesDepth: boolean

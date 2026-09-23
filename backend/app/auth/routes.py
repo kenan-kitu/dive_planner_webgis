@@ -81,7 +81,7 @@ def account_profile(current_user: CurrentUser) -> dict[str, str]:
 def dive_center_dashboard(
     current_user: Annotated[
         User,
-        Depends(require_roles(UserRole.DIVE_CENTER, UserRole.ADMIN)),
+        Depends(require_roles(UserRole.DIVE_CENTER)),
     ],
 ) -> dict[str, str]:
     return {
