@@ -10,6 +10,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -24,6 +25,12 @@ class UserRole(str, Enum):
     USER = "USER"
     DIVE_CENTER = "DIVE_CENTER"
     ADMIN = "ADMIN"
+
+
+class SubmissionStatus(str, Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
 
 
 class User(Base):
@@ -169,4 +176,81 @@ class Favorite(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
+    )
+
+
+class DiveCenterProfile(Base):
+    __tablename__ = "dive_center_profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+    )
+    business_name: Mapped[str] = mapped_column(String(150))
+    description: Mapped[str | None] = mapped_column(String(2000))
+    phone: Mapped[str | None] = mapped_column(String(100))
+    website: Mapped[str | None] = mapped_column(String(500))
+    address: Mapped[str | None] = mapped_column(String(500))
+    agencies: Mapped[list[str]] = mapped_column(JSON, default=list)
+    services: Mapped[list[str]] = mapped_column(JSON, default=list)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class DiveSiteSubmission(Base):
+    __tablename__ = "dive_site_submissions"
+    __table_args__ = (
+        CheckConstraint(
+            "site_type IN ('Reef', 'Wreck', 'Wall')",
+            name="ck_submission_site_type",
+        ),
+        CheckConstraint("min_depth_m IS NULL OR min_depth_m >= 0", name="ck_submission_min_depth"),
+        CheckConstraint("max_depth_m IS NULL OR max_depth_m >= 0", name="ck_submission_max_depth"),
+        CheckConstraint(
+            "min_depth_m IS NULL OR max_depth_m IS NULL OR max_depth_m >= min_depth_m",
+            name="ck_submission_depth_order",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    submitted_by: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(String(150))
+    site_type: Mapped[str] = mapped_column(String(20))
+    min_depth_m: Mapped[float | None] = mapped_column(Float)
+    max_depth_m: Mapped[float | None] = mapped_column(Float)
+    description: Mapped[str] = mapped_column(String(2000))
+    geom: Mapped[object] = mapped_column(
+        Geometry("POINT", srid=4326, spatial_index=False)
+    )
+    status: Mapped[SubmissionStatus] = mapped_column(
+        SqlEnum(SubmissionStatus, name="submission_status"),
+        default=SubmissionStatus.PENDING,
+        index=True,
+    )
+    admin_note: Mapped[str | None] = mapped_column(String(1000))
+    reviewed_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
     )

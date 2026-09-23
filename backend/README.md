@@ -38,6 +38,29 @@ Authenticated USER -> Bearer JWT -> Comment / Rating / Favorite
 Anonymous visitor  -> public GET  -> Comments / rating summary
 ```
 
+The V2 final portfolio layer adds a Dive Center portal, spatial submissions, and an application Admin Panel. It deliberately keeps imported and contributed GIS records separate:
+
+```text
+React
+   |
+   v
+FastAPI
+   |
+   v
+PostgreSQL/PostGIS
+
+GeoServer
+   |
+   v
+existing official GIS data (unchanged)
+
+DIVE_CENTER -> submission -> PENDING -> ADMIN REVIEW
+                                      |-> APPROVED -> public contributed layer
+                                      |-> REJECTED -> owner status and admin note
+```
+
+Approved contributed points come from `GET /api/community/dive-sites`. They are displayed with a distinct map symbol and provenance label; they are never inserted into the imported `dive_sites` table.
+
 ## Start locally
 
 1. Copy `.env.example` to `.env` only if you need to override the safe local defaults.
@@ -86,8 +109,8 @@ Passwords are hashed with Argon2 and the hash is never returned by the API. A su
 Roles are:
 
 - `USER`: authenticated account/profile access.
-- `DIVE_CENTER`: account access plus the dive-center area.
-- `ADMIN`: access to all protected areas.
+- `DIVE_CENTER`: account access plus its own profile and dive-site submissions.
+- `ADMIN`: application administration, moderation, verification, and submission review.
 
 Public registration always creates `USER`; the request cannot choose a privileged role.
 
@@ -100,8 +123,54 @@ Authentication endpoints:
 Role examples:
 
 - `GET /api/account/profile`: any authenticated user.
-- `GET /api/dive-center/dashboard`: `DIVE_CENTER` or `ADMIN`.
+- `GET /api/dive-center/dashboard`: `DIVE_CENTER` only.
 - `GET /api/admin/status`: `ADMIN` only.
+
+## Dive Center portal and contributed sites
+
+Migration `20260922_0004` creates:
+
+- `dive_center_profiles`: one profile per `DIVE_CENTER` user through a unique `user_id` foreign key. Business information is separate from authentication fields. `is_verified` is only an application-level status.
+- `dive_site_submissions`: a PostGIS `geometry(Point, 4326)` proposal with a GiST index, owner, depth validation, review state, reviewer, timestamp, and optional admin note.
+
+Profile endpoints (`DIVE_CENTER` only):
+
+- `GET /api/dive-center/profile`
+- `PUT /api/dive-center/profile`
+- `PATCH /api/dive-center/profile`
+
+Submission endpoints (`DIVE_CENTER` owner only):
+
+- `POST /api/dive-center/submissions`
+- `GET /api/dive-center/submissions`
+- `GET /api/dive-center/submissions/{id}`
+- `PATCH /api/dive-center/submissions/{id}` — only while `PENDING`
+- `DELETE /api/dive-center/submissions/{id}` — only while `PENDING`
+
+Longitude/latitude, the three supported site types, non-negative depths, and depth order are validated in the API and reinforced by database constraints. A Dive Center cannot access another account's submission or review its own submission.
+
+Public contributed endpoint:
+
+- `GET /api/community/dive-sites` — anonymous GeoJSON; includes only `APPROVED` records.
+
+`PENDING` and `REJECTED` records never appear in the public response. The response includes the submitting account/business name and `data_origin: dive_center_submitted` so the UI never represents it as official imported data.
+
+## Application Admin Panel
+
+The Admin Panel is an application UI, not a database-management tool. Its API endpoints require the `ADMIN` role:
+
+- `GET /api/admin/dashboard`
+- `GET /api/admin/users`
+- `PATCH /api/admin/users/{id}` — activate/deactivate or change between `USER` and `DIVE_CENTER`
+- `GET /api/admin/dive-centers`
+- `PATCH /api/admin/dive-centers/{id}/verification`
+- `GET /api/admin/comments`
+- `DELETE /api/comments/{id}` — reuses V2.3 moderation authorization
+- `GET /api/admin/submissions?status=PENDING`
+- `POST /api/admin/submissions/{id}/approve`
+- `POST /api/admin/submissions/{id}/reject`
+
+Public registration still creates only `USER`. The management endpoint cannot create or assign `ADMIN`, cannot modify an existing admin account, and prevents the current admin from disabling or changing itself. Approval stores the reviewer and review time. Rejection exposes the optional admin note only to the submission owner and administrators.
 
 ## Comments, ratings, and favorites
 
@@ -187,7 +256,7 @@ The command can be rerun: it creates missing accounts and updates existing local
 
 ### Security scope
 
-This is a portfolio-oriented local implementation. The JWT signing secret in `.env.example` is explicitly development-only and must be replaced in any non-local environment. Access tokens are stored in browser `localStorage` to keep this phase understandable; this is convenient but JavaScript-accessible and therefore more exposed to cross-site scripting than an `HttpOnly`, `Secure` cookie design. Refresh-token rotation, password reset, email verification, login throttling, MFA, external OAuth providers, threaded replies, and moderation workflows are intentionally outside V2.3.
+This is a portfolio-oriented local implementation. The JWT signing secret in `.env.example` is explicitly development-only and must be replaced in any non-local environment. Access tokens are stored in browser `localStorage` to keep this version understandable; this is convenient but JavaScript-accessible and therefore more exposed to cross-site scripting than an `HttpOnly`, `Secure` cookie design. Refresh-token rotation, password reset, email verification, login throttling, MFA, external OAuth providers, threaded replies, legal/business verification, and complex moderation/reporting workflows are intentionally outside this version.
 
 CORS permits only the documented local Vite origins. Credentials are not enabled and tokens/passwords are not logged.
 
@@ -199,7 +268,7 @@ With the Compose stack running:
 docker compose exec backend pytest -q
 ```
 
-The integration suite checks database/PostGIS availability, health, exact layer counts, filters, detail lookup, the real PostGIS nearby query, registration/login, token authentication, Argon2 hashing, all three role boundaries, comment ownership, rating upserts/aggregates, favorite uniqueness, and private favorite lists.
+The integration suite checks database/PostGIS availability, health, exact layer counts, filters, detail lookup, the real PostGIS nearby query, registration/login, token authentication, Argon2 hashing, all three role boundaries, comment ownership, rating upserts/aggregates, favorite uniqueness, private favorite lists, profile ownership, submission geometry/validation, pending-only edits, admin safeguards, approval/rejection visibility, verification, moderation, and the complete promotion-to-publication workflow.
 
 ## Stop
 

@@ -36,7 +36,9 @@ import {
   fetchDiveCenters,
   fetchDiveSites,
 } from './services/geoserver'
+import { fetchCommunityDiveSites } from './services/portal'
 import type {
+  CommunityDiveSiteCollection,
   DeparturePointCollection,
   DiveSiteFeature,
   DiveCenterCollection,
@@ -113,6 +115,9 @@ function App() {
     useState<DiveCenterCollection | null>(null)
   const [departurePoints, setDeparturePoints] =
     useState<DeparturePointCollection | null>(null)
+  const [communityDiveSites, setCommunityDiveSites] =
+    useState<CommunityDiveSiteCollection | null>(null)
+  const [communityRevision, setCommunityRevision] = useState(0)
   const [loading, setLoading] = useState<LayerState<boolean>>(INITIAL_LOADING)
   const [errors, setErrors] =
     useState<LayerState<string | null>>(INITIAL_ERRORS)
@@ -214,6 +219,18 @@ function App() {
 
     return () => controller.abort()
   }, [requestVersion])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    void fetchCommunityDiveSites(controller.signal)
+      .then(setCommunityDiveSites)
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setCommunityDiveSites({ type: 'FeatureCollection', features: [] })
+        }
+      })
+    return () => controller.abort()
+  }, [communityRevision])
 
   const isAnythingLoading = Object.values(loading).some(Boolean)
   const effectiveDepthLimit = getEffectiveDepthLimit(diverProfile)
@@ -799,7 +816,10 @@ function App() {
           <h1>{t.app.title}</h1>
         </div>
         <div className="topbar__actions">
-          <AuthControls onSelectFavorite={selectFavoriteDiveSite} />
+          <AuthControls
+            onSelectFavorite={selectFavoriteDiveSite}
+            onCommunityChanged={() => setCommunityRevision((value) => value + 1)}
+          />
           <LanguageSwitcher />
           <div className="phase-badge">{t.app.phase}</div>
         </div>
@@ -1187,6 +1207,7 @@ function App() {
         <section className="map-panel" aria-label={t.app.mapAriaLabel}>
           <DiveMap
             diveSites={diveSites}
+            communityDiveSites={communityDiveSites}
             diveCenters={contextualDiveCenters}
             departurePoints={contextualDeparturePoints}
             visibility={contextualVisibility}

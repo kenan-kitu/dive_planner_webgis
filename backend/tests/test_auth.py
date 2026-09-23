@@ -179,10 +179,10 @@ def test_dive_center_cannot_access_admin_endpoint() -> None:
     assert response.status_code == 403
 
 
-def test_admin_can_access_all_protected_endpoints() -> None:
+def test_admin_access_is_separate_from_dive_center_management() -> None:
     headers = authorization(role_token(UserRole.ADMIN))
     assert client.get("/api/account/profile", headers=headers).status_code == 200
-    assert client.get("/api/dive-center/dashboard", headers=headers).status_code == 200
+    assert client.get("/api/dive-center/dashboard", headers=headers).status_code == 403
     assert client.get("/api/admin/status", headers=headers).status_code == 200
 
 
