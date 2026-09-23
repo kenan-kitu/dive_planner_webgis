@@ -1,8 +1,6 @@
 import type { DiveSiteCollection } from '../types/gis'
+import { apiUrl } from '../config/api'
 import type { UserRole } from './auth'
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
 
 export interface CommunityComment {
   id: number
@@ -25,11 +23,11 @@ interface FavoriteStatus {
 }
 
 async function communityRequest<T>(
-  path: string,
+  path: `/api/${string}`,
   options: RequestInit = {},
   token?: string | null,
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',

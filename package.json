@@ -11,7 +11,8 @@
     "test:rich-details": "node --experimental-strip-types scripts/verify-rich-details.mts",
     "test:spatial": "node --experimental-strip-types scripts/verify-spatial.mts",
     "test:filters": "node --experimental-strip-types scripts/verify-site-filtering.mts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cloudflare:check": "wrangler deploy --dry-run --outdir .wrangler/dry-run"
   },
   "dependencies": {
     "@turf/turf": "^7.4.0",
@@ -27,6 +28,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "wrangler": "^4.136.3"
   }
 }

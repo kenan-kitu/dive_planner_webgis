@@ -1,3 +1,5 @@
+import { apiUrl } from '../config/api'
+
 export type UserRole = 'USER' | 'DIVE_CENTER' | 'ADMIN'
 
 export interface AuthUser {
@@ -21,15 +23,12 @@ export interface RegisterInput {
   display_name: string
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
-
 async function request<T>(
-  path: string,
+  path: `/api/${string}`,
   options: RequestInit = {},
   token?: string,
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',

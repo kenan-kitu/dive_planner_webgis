@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "dive-planner-webgis-v2",
+  "main": "./cloudflare/worker.js",
+  "compatibility_date": "2026-09-23",
+  "keep_vars": true,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/geoserver/*"]
+  }
+}

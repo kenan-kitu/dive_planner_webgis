@@ -1,8 +1,6 @@
 import type { CommunityDiveSiteCollection } from '../types/gis'
+import { apiUrl } from '../config/api'
 import type { AuthUser, UserRole } from './auth'
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
 
 export class PortalApiError extends Error {
   constructor(
@@ -14,11 +12,11 @@ export class PortalApiError extends Error {
 }
 
 async function request<T>(
-  path: string,
+  path: `/api/${string}`,
   options: RequestInit = {},
   token?: string | null,
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',
