@@ -29,7 +29,12 @@ function parseHttpsOrigin(value, variableName) {
   return origin
 }
 
-async function proxyToOrigin(request, originValue, variableName) {
+async function proxyToOrigin(
+  request,
+  originValue,
+  variableName,
+  upstreamPathname,
+) {
   let origin
   try {
     origin = parseHttpsOrigin(originValue, variableName)
@@ -40,7 +45,10 @@ async function proxyToOrigin(request, originValue, variableName) {
   }
 
   const incomingUrl = new URL(request.url)
-  const upstreamUrl = new URL(incomingUrl.pathname + incomingUrl.search, origin)
+  const upstreamUrl = new URL(
+    (upstreamPathname ?? incomingUrl.pathname) + incomingUrl.search,
+    origin,
+  )
   const upstreamRequest = new Request(upstreamUrl, request)
   upstreamRequest.headers.set('X-Forwarded-Host', incomingUrl.host)
   upstreamRequest.headers.set('X-Forwarded-Proto', incomingUrl.protocol.slice(0, -1))
@@ -52,7 +60,12 @@ export default {
     const pathname = new URL(request.url).pathname
 
     if (pathname.startsWith('/api/')) {
-      return proxyToOrigin(request, env.FASTAPI_ORIGIN, 'FASTAPI_ORIGIN')
+      return proxyToOrigin(
+        request,
+        env.FASTAPI_ORIGIN,
+        'FASTAPI_ORIGIN',
+        pathname === '/api/health' ? '/health' : undefined,
+      )
     }
 
     if (pathname.startsWith('/geoserver/')) {
