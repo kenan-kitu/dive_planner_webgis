@@ -9,12 +9,11 @@ import {
 import {
   getCurrentUser,
   loginAccount,
+  logoutAccount,
   registerAccount,
   type AuthUser,
   type RegisterInput,
 } from '../../services/auth'
-
-const TOKEN_STORAGE_KEY = 'dive-planner-access-token'
 
 export type AuthMode = 'login' | 'register'
 
@@ -39,37 +38,32 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem(TOKEN_STORAGE_KEY),
-  )
+  const [token, setToken] = useState<string | null>(null)
   const [authMode, setAuthMode] = useState<AuthMode | null>(null)
   const [favoritesOpen, setFavoritesOpen] = useState(false)
   const [favoritesRevision, setFavoritesRevision] = useState(0)
 
   useEffect(() => {
-    if (!token) {
-      setUser(null)
-      return
-    }
-    getCurrentUser(token)
-      .then(setUser)
+    getCurrentUser()
+      .then((authenticatedUser) => {
+        setUser(authenticatedUser)
+        setToken('cookie-session')
+      })
       .catch(() => {
-        localStorage.removeItem(TOKEN_STORAGE_KEY)
         setToken(null)
         setUser(null)
       })
-  }, [token])
+  }, [])
 
-  const storeSession = (accessToken: string, authenticatedUser: AuthUser) => {
-    localStorage.setItem(TOKEN_STORAGE_KEY, accessToken)
-    setToken(accessToken)
+  const storeSession = (authenticatedUser: AuthUser) => {
+    setToken('cookie-session')
     setUser(authenticatedUser)
     setAuthMode(null)
   }
 
   const signIn = async (email: string, password: string) => {
     const result = await loginAccount(email, password)
-    storeSession(result.access_token, result.user)
+    storeSession(result.user)
   }
 
   const register = async (input: RegisterInput) => {
@@ -78,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = () => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY)
+    void logoutAccount().catch(() => undefined)
     setToken(null)
     setUser(null)
     setAuthMode(null)

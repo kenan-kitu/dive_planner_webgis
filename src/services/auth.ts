@@ -11,9 +11,6 @@ export interface AuthUser {
 }
 
 export interface LoginResponse {
-  access_token: string
-  token_type: 'bearer'
-  expires_in: number
   user: AuthUser
 }
 
@@ -26,13 +23,12 @@ export interface RegisterInput {
 async function request<T>(
   path: `/api/${string}`,
   options: RequestInit = {},
-  token?: string,
 ): Promise<T> {
   const response = await fetch(apiUrl(path), {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   })
@@ -61,6 +57,10 @@ export function loginAccount(email: string, password: string): Promise<LoginResp
   })
 }
 
-export function getCurrentUser(token: string): Promise<AuthUser> {
-  return request<AuthUser>('/api/auth/me', {}, token)
+export function getCurrentUser(): Promise<AuthUser> {
+  return request<AuthUser>('/api/auth/me')
+}
+
+export function logoutAccount(): Promise<void> {
+  return request<void>('/api/auth/logout', { method: 'POST' })
 }

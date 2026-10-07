@@ -25,13 +25,13 @@ interface FavoriteStatus {
 async function communityRequest<T>(
   path: `/api/${string}`,
   options: RequestInit = {},
-  token?: string | null,
+  _token?: string | null,
 ): Promise<T> {
   const response = await fetch(apiUrl(path), {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   })

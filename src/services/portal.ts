@@ -14,13 +14,13 @@ export class PortalApiError extends Error {
 async function request<T>(
   path: `/api/${string}`,
   options: RequestInit = {},
-  token?: string | null,
+  _token?: string | null,
 ): Promise<T> {
   const response = await fetch(apiUrl(path), {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   })

@@ -36,7 +36,7 @@ import {
   fetchDeparturePoints,
   fetchDiveCenters,
   fetchDiveSites,
-} from './services/geoserver'
+} from './services/officialData'
 import { fetchCommunityDiveSites } from './services/portal'
 import type {
   CommunityDiveSiteCollection,
