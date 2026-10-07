@@ -4,6 +4,15 @@ A bilingual, mobile-first WebGIS portfolio project for exploring Florida Keys di
 
 **Live demo:** https://dive-planner-webgis-v3.florida-keys-dive-planner.workers.dev
 
+## What I implemented
+
+- Designed and built the interactive planning experience with React, TypeScript, Leaflet and Turf.js.
+- Implemented map-driven filtering, certification/depth matching, distance analysis and boat-trip planning workflows.
+- Built and integrated GeoServer/WFS + GeoPackage in V1, followed by FastAPI + PostgreSQL/PostGIS + Alembic + Docker in V2.
+- Implemented authentication, role-based access control, comments, ratings, favorites, Dive Center submissions and Admin moderation.
+- Migrated the public V3 deployment to Cloudflare Workers + D1 + bundled official GeoJSON to remove free-tier cold starts.
+- Managed the architecture evolution through Git branches, pull requests and tagged releases.
+
 ## Technology stack
 
 React, TypeScript, Vite, Leaflet, Turf.js, Cloudflare Workers, Static Assets, D1 and Wrangler. Earlier tagged releases also demonstrate GeoServer/WFS, GeoPackage, FastAPI, PostgreSQL/PostGIS, Docker and Alembic.
@@ -169,4 +178,4 @@ Official GIS features are read-only portfolio data derived from the repository G
 
 - `v1.0.0`: GeoServer/WFS + GeoPackage milestone
 - `v2.0.0`: FastAPI/PostGIS full-stack milestone
-- `v3.0.1`: current serverless portfolio release
+- `v3.0.2`: current serverless portfolio release
