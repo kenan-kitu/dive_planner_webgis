@@ -42,7 +42,10 @@ result = await call('/api/admin/bootstrap', {
   payload: { email: adminEmail, password: adminPassword, display_name: 'Local V3 Admin' },
   headers: { 'X-Bootstrap-Secret': bootstrapSecret },
 })
-expect(result.response.status === 201 || result.response.status === 409, 'one-time admin bootstrap')
+expect(
+  result.response.status === 201 || result.response.status === 409,
+  `one-time admin bootstrap (${result.response.status}: ${result.data?.detail ?? 'no detail'})`,
+)
 
 result = await call('/api/auth/login', { method: 'POST', payload: { email: adminEmail, password: adminPassword } })
 expect(result.response.ok && result.data.user.role === 'ADMIN', 'ADMIN login')

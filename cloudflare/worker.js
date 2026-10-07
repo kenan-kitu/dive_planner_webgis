@@ -1,4 +1,6 @@
-const ITERATIONS = 210_000
+import { pbkdf2Sync, timingSafeEqual } from 'node:crypto'
+
+const ITERATIONS = 100_000
 const SESSION_SECONDS = 43_200
 const SECURITY_HEADERS = {
   'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://tile.openstreetmap.org https://tiles.openseamap.org https://floridakeys.noaa.gov https://upload.wikimedia.org https://thumb.wikimedia.org https://silentworld.com https://conchrepublicdivers.com https://floridakeysdivecenter.com https://captainhooks.com https://img1.wsimg.com https://static.wixstatic.com https://www.scubatechkeylargo.com https://divekeywest.com https://lostreefadventures.com https://www.snorkelingisfun.com https://dlsmyzcs6vrg4.cloudfront.net https://i.vimeocdn.com; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; worker-src 'self' blob:",
@@ -58,16 +60,11 @@ function list(value, field) {
 function b64(bytes) { let text = ''; bytes.forEach((byte) => { text += String.fromCharCode(byte) }); return btoa(text) }
 function unb64(value) { return Uint8Array.from(atob(value), (character) => character.charCodeAt(0)) }
 async function sha(value) { return b64(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))) }
-async function derive(raw, salt, iterations = ITERATIONS) {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(raw), 'PBKDF2', false, ['deriveBits'])
-  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations }, key, 256))
-}
+async function derive(raw, salt, iterations = ITERATIONS) { return pbkdf2Sync(raw, salt, iterations, 32, 'sha256') }
 async function hashPassword(raw) { const salt = crypto.getRandomValues(new Uint8Array(16)); return { hash: b64(await derive(raw, salt)), salt: b64(salt) } }
 async function checkPassword(raw, user) {
   const actual = await derive(raw, unb64(user.password_salt), user.password_iterations); const expected = unb64(user.password_hash)
-  let difference = actual.length ^ expected.length
-  for (let index = 0; index < Math.max(actual.length, expected.length); index += 1) difference |= (actual[index] || 0) ^ (expected[index] || 0)
-  return difference === 0
+  return actual.length === expected.length && timingSafeEqual(actual, expected)
 }
 function equal(left, right) {
   const a = String(left || ''), b = String(right || ''); let difference = a.length ^ b.length

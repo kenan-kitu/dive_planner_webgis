@@ -58,7 +58,7 @@ GeoServer/WFS and FastAPI/PostgreSQL/PostGIS were intentionally built and used i
 
 ## Security model
 
-- Passwords use Worker-compatible PBKDF2-SHA-256 with a random per-user salt and 210,000 iterations.
+- Passwords use Worker-compatible PBKDF2-SHA-256 with a random per-user salt and 100,000 iterations.
 - Authentication uses random, server-stored sessions in `HttpOnly; Secure; SameSite=Strict` cookies; tokens are never stored in browser storage.
 - Every privileged endpoint enforces server-side RBAC.
 - State-changing requests require the same browser origin.
