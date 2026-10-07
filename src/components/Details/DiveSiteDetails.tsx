@@ -4,8 +4,11 @@ import type { DeparturePointFeature, DiveSiteFeature } from '../../types/gis'
 import type { DistanceResult } from '../../utils/spatial'
 import { calculateTravelTimeMinutes } from '../../utils/spatial'
 import { localizeDiveSiteEnrichment } from '../../utils/enrichment'
+import { getDiveSitePlanningDepths } from '../../utils/siteFiltering'
 import { DetailList, DetailSources, DetailText } from './DetailParts'
 import { PhotoGallery } from './PhotoGallery'
+import { CommunitySection } from '../Community/CommunitySection'
+import { getDiveSiteNumericId } from '../../utils/diveSiteId'
 
 interface DiveSiteDetailsProps {
   site: DiveSiteFeature
@@ -19,16 +22,6 @@ interface DiveSiteDetailsProps {
   onFindDiveCenters: () => void
   onPlanBoatTrip: () => void
   onShowOnMap: () => void
-}
-
-function depthValues(site: DiveSiteFeature, enrichment: DiveSiteEnrichment | null) {
-  const minimum = enrichment?.knownDepth
-    ? enrichment.knownDepth.minimumMeters
-    : site.properties.min_depth_m
-  const maximum = enrichment?.knownDepth
-    ? enrichment.knownDepth.maximumMeters
-    : site.properties.max_depth_m
-  return { minimum, maximum }
 }
 
 function departureTypeLabel(
@@ -58,12 +51,12 @@ export function DiveSiteDetails({
   const localizedEnrichment = localizeDiveSiteEnrichment(enrichment, language)
   const properties = site.properties
   const type = localizedEnrichment?.diveType ?? properties.site_type
-  const depth = depthValues(site, localizedEnrichment)
+  const depth = getDiveSitePlanningDepths(site)
   const hasTrip = selectedDeparture && directDistanceNm != null
-  const siteMaximumDepth = localizedEnrichment?.knownDepth?.maximumMeters ?? properties.max_depth_m
   const matchesCertification =
     effectiveDepthLimit == null ||
-    (siteMaximumDepth != null && siteMaximumDepth <= effectiveDepthLimit)
+    (depth.maximum != null && depth.maximum <= effectiveDepthLimit)
+  const siteId = getDiveSiteNumericId(site)
 
   return (
     <article className="rich-detail rich-detail--site" aria-labelledby="site-detail-title">
@@ -181,6 +174,7 @@ export function DiveSiteDetails({
         )}
         <small>{t.catalog.departureDisclaimer}</small>
       </section>
+      {siteId != null ? <CommunitySection siteId={siteId} /> : null}
       {localizedEnrichment && <DetailSources sources={localizedEnrichment.sources} />}
     </article>
   )

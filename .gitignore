@@ -3,6 +3,14 @@ dist
 .vite
 *.local
 *.log
+.env
+.env.*
+!.env.example
+.dev.vars
+__pycache__/
+.pytest_cache/
+*.py[cod]
 
 # Local Netlify folder
 .netlify
+.wrangler

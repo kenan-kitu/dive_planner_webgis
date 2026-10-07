@@ -1,7 +1,12 @@
 import { divIcon, type DivIcon } from 'leaflet'
+import {
+  MAP_SYMBOL_COLORS,
+  type MapSymbolId,
+} from './mapSymbolPalette'
+
+export { MAP_SYMBOL_COLORS, type MapSymbolId } from './mapSymbolPalette'
 
 export type BasemapId = 'light' | 'street' | 'satellite'
-export type MapSymbolId = 'reef' | 'wreck' | 'wall' | 'diveCenter' | 'departure'
 export type MapSymbolVariant = 'matching' | 'muted' | 'selected' | 'nearby' | 'default'
 
 export const BASEMAPS: Record<
@@ -92,7 +97,7 @@ export function createMapIcon(
   const size = selected ? 44 : 38
   const icon = divIcon({
     className: `feature-marker-wrapper feature-marker-wrapper--${variant}`,
-    html: `<span class="map-symbol map-symbol--${symbol} map-symbol--${variant}">${mapSymbolSvg(symbol)}</span>`,
+    html: `<span class="map-symbol map-symbol--${symbol} map-symbol--${variant}" style="--map-symbol-color:${MAP_SYMBOL_COLORS[symbol]}">${mapSymbolSvg(symbol)}</span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -(size / 2)],

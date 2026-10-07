@@ -10,7 +10,11 @@
     "test:enrichment": "node --experimental-strip-types scripts/verify-enrichment.mts",
     "test:rich-details": "node --experimental-strip-types scripts/verify-rich-details.mts",
     "test:spatial": "node --experimental-strip-types scripts/verify-spatial.mts",
-    "preview": "vite preview"
+    "test:filters": "node --experimental-strip-types scripts/verify-site-filtering.mts",
+    "test:v3-data": "node --experimental-strip-types scripts/verify-v3-data.mts",
+    "test:v3-api": "node scripts/verify-v3-api.mjs",
+    "preview": "vite preview",
+    "cloudflare:check": "wrangler deploy --dry-run --outdir .wrangler/dry-run"
   },
   "dependencies": {
     "@turf/turf": "^7.4.0",
@@ -26,6 +30,10 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "wrangler": "^4.148.0"
+  },
+  "overrides": {
+    "sharp": "0.35.5"
   }
 }

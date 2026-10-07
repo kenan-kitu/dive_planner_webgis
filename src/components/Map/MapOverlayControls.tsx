@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import {
   MAP_ANALYSIS_STYLES,
+  MAP_SYMBOL_COLORS,
   MAP_SYMBOLS,
   type BasemapId,
   type MapSymbolId,
@@ -30,6 +31,9 @@ function LegendSymbol({ symbol, variant }: Omit<SymbolLegendItem, 'label'>) {
   return (
     <span
       className={`map-symbol map-symbol--legend map-symbol--${symbol} map-symbol--${variant}`}
+      style={{
+        '--map-symbol-color': MAP_SYMBOL_COLORS[symbol],
+      } as CSSProperties}
       aria-hidden="true"
       dangerouslySetInnerHTML={{
         __html: `<svg viewBox="${definition.viewBox}">${definition.body}</svg>`,
@@ -146,6 +150,10 @@ export function MapOverlayControls({
                   <span>{item.label}</span>
                 </div>
               ))}
+              <div>
+                <span className="map-legend__community" aria-hidden="true" />
+                <span>{t.map.communityDiveSite}</span>
+              </div>
             </div>
             <div className="map-legend__group">
               <strong>{t.map.otherPoints}</strong>

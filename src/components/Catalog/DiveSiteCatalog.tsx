@@ -1,4 +1,3 @@
-import type { DiveSiteEnrichment } from '../../data/enrichment/types'
 import { useLanguage } from '../../i18n/LanguageContext'
 import type { DiveSiteAnalysis, DiveSiteFeature } from '../../types/gis'
 import {
@@ -7,6 +6,7 @@ import {
   localizeDiveSiteEnrichment,
 } from '../../utils/enrichment'
 import { calculateTravelTimeMinutes } from '../../utils/spatial'
+import { getDiveSitePlanningDepths } from '../../utils/siteFiltering'
 import { CatalogMedia } from './CatalogMedia'
 
 interface DiveSiteCatalogProps {
@@ -20,19 +20,6 @@ interface DiveSiteCatalogProps {
   onSearchChange?: (value: string) => void
   onTypeFilterChange?: (value: string | null) => void
   onSelect: (site: DiveSiteFeature) => void
-}
-
-function depthValues(
-  site: DiveSiteFeature,
-  enrichment: DiveSiteEnrichment | null,
-): { minimum: number | null; maximum: number | null } {
-  const minimum = enrichment?.knownDepth
-    ? enrichment.knownDepth.minimumMeters
-    : site.properties.min_depth_m
-  const maximum = enrichment?.knownDepth
-    ? enrichment.knownDepth.maximumMeters
-    : site.properties.max_depth_m
-  return { minimum, maximum }
 }
 
 export function DiveSiteCatalog({
@@ -105,7 +92,7 @@ export function DiveSiteCatalog({
             const result = analysis.get(site)
             const isSelected = selectedSite === site
             const type = enrichment?.diveType ?? site.properties.site_type
-            const depth = depthValues(site, enrichment)
+            const depth = getDiveSitePlanningDepths(site)
 
             return (
               <article

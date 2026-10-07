@@ -1,4 +1,4 @@
-import { latLngBounds, marker, type Layer } from 'leaflet'
+import { circleMarker, latLngBounds, marker, type Layer } from 'leaflet'
 import { useEffect, useMemo, useState } from 'react'
 import {
   GeoJSON,
@@ -22,6 +22,8 @@ import type { Translation } from '../../i18n/translations'
 import type {
   DeparturePointCollection,
   DeparturePointFeature,
+  CommunityDiveSiteCollection,
+  CommunityDiveSiteFeature,
   DiveSiteAnalysis,
   DiveCenterCollection,
   DiveCenterFeature,
@@ -37,6 +39,7 @@ import { MapOverlayControls } from './MapOverlayControls'
 
 interface DiveMapProps {
   diveSites: DiveSiteCollection | null
+  communityDiveSites: CommunityDiveSiteCollection | null
   diveCenters: DiveCenterCollection | null
   departurePoints: DeparturePointCollection | null
   visibility: LayerState<boolean>
@@ -238,6 +241,7 @@ function localizeDataValue(value: string | null, t: Translation): string {
 
 export function DiveMap({
   diveSites,
+  communityDiveSites,
   diveCenters,
   departurePoints,
   visibility,
@@ -540,6 +544,40 @@ export function DiveMap({
                   ${distanceResult}
                 </dl>
                 ${distanceDisclaimer}
+              </article>
+            `)
+          }}
+        />
+      )}
+      {visibility.diveSites && communityDiveSites && (
+        <GeoJSON
+          key={`community-dive-sites-${language}-${communityDiveSites.features.length}`}
+          data={communityDiveSites}
+          pointToLayer={(feature, latlng) => {
+            const site = feature as CommunityDiveSiteFeature
+            return circleMarker(latlng, {
+              radius: 9,
+              color: '#7c2d12',
+              weight: 2.5,
+              fillColor: '#f59e0b',
+              fillOpacity: 0.92,
+              className: 'community-dive-site-marker',
+              bubblingMouseEvents: false,
+            }).bindTooltip(site.properties.site_name)
+          }}
+          onEachFeature={(feature, layer: Layer) => {
+            const site = feature as CommunityDiveSiteFeature
+            const properties = site.properties
+            layer.bindPopup(`
+              <article class="site-popup site-popup--community">
+                <p class="site-popup__eyebrow">${escapeHtml(t.portal.contributedLabel)}</p>
+                <h2>${escapeHtml(properties.site_name)}</h2>
+                <dl>
+                  ${popupRow(t.popup.siteType, localizeDataValue(properties.site_type, t))}
+                  ${popupRow(t.popup.depthRange, formatDepth(properties.min_depth_m, properties.max_depth_m, t))}
+                  ${popupRow(t.portal.contributedBy, properties.business_name ?? properties.submitter_name)}
+                </dl>
+                <p>${escapeHtml(properties.description)}</p>
               </article>
             `)
           }}
