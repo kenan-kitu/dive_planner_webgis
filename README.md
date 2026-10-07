@@ -19,7 +19,66 @@ React, TypeScript, Vite, Leaflet, Turf.js, Cloudflare Workers, Static Assets, D1
 
 ## Screenshots
 
-The validated live V3 deployment above is the canonical portfolio preview.
+### WebGIS planning experience
+
+The map keeps planning controls, spatial results and the synchronized dive-site catalog visible in one workspace.
+
+![Florida Keys WebGIS planner with mapped dive sites, legend and synchronized results](docs/screenshots/v3-main-planner.png)
+
+<details>
+<summary>View more planning screens</summary>
+
+| Goal-driven start | Boat reach-zone planning |
+|---|---|
+| <img src="docs/screenshots/v3-goal-selection.png" alt="Four goal-driven planning paths" width="440"> | <img src="docs/screenshots/v3-boat-planning.png" alt="Boat departure reach zone and reachable dive sites" width="440"> |
+
+| Dive-center details | Nautical map context |
+|---|---|
+| <img src="docs/screenshots/v3-dive-center-detail.png" alt="Dive-center detail with map location and contact information" width="440"> | <img src="docs/screenshots/v3-nautical-map.png" alt="Street basemap with nautical and seamark overlay" width="440"> |
+
+</details>
+
+### Community features
+
+Authenticated users can save dive sites, rate them and participate in site-specific discussions.
+
+| Favorites | Ratings and comments |
+|---|---|
+| <img src="docs/screenshots/v3-favorites.png" alt="Saved favorite dive sites" width="360"> | <img src="docs/screenshots/v3-community-rating-comment.png" alt="Dive-site rating and comment interface" width="360"> |
+
+### Dive Center portal
+
+Dive Center accounts manage a public-facing profile and map location, then submit spatial dive-site contributions for review.
+
+![Dive Center profile editor with business location map](docs/screenshots/v3-dive-center-profile-location.png)
+
+<details>
+<summary>View the submission workflow</summary>
+
+| Map-based dive-site submission | Pending owner view |
+|---|---|
+| <img src="docs/screenshots/v3-dive-site-submission.png" alt="Dive Center selecting a proposed dive-site location and entering details" width="440"> | <img src="docs/screenshots/v3-submission-pending.png" alt="Submitted dive site awaiting administrator review" width="440"> |
+
+**Workflow:** Dive Center selects a map location → creates a submission → `PENDING` → Admin reviews the spatial record → approves or rejects it → approved contributions become public → Admin can later archive/unpublish them.
+
+</details>
+
+### Administration and moderation
+
+The Admin Panel provides a compact operational overview and separate review surfaces for profiles, comments and contributed dive sites.
+
+![Administration dashboard with account, comment and submission counts](docs/screenshots/v3-admin-dashboard.png)
+
+<details>
+<summary>View the admin workflow</summary>
+
+| Dive Center verification | Comment moderation |
+|---|---|
+| <img src="docs/screenshots/v3-admin-dive-centers.png" alt="Administrator verifying a Dive Center profile" width="440"> | <img src="docs/screenshots/v3-admin-comments.png" alt="Administrator reviewing a community comment" width="440"> |
+
+![Administrator reviewing a pending spatial dive-site submission](docs/screenshots/v3-admin-submission-review.png)
+
+</details>
 
 ## V3 architecture
 
@@ -110,4 +169,4 @@ Official GIS features are read-only portfolio data derived from the repository G
 
 - `v1.0.0`: GeoServer/WFS + GeoPackage milestone
 - `v2.0.0`: FastAPI/PostGIS full-stack milestone
-- `v3.0.0`: serverless portfolio release
+- `v3.0.1`: current serverless portfolio release

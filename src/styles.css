@@ -98,15 +98,6 @@ select {
   text-transform: uppercase;
 }
 
-.phase-badge {
-  padding: 6px 10px;
-  color: #a9e7e7;
-  font-size: 0.72rem;
-  font-weight: 700;
-  border: 1px solid rgb(118 217 220 / 35%);
-  border-radius: 999px;
-}
-
 .topbar__actions {
   display: flex;
   align-items: center;
@@ -4010,10 +4001,6 @@ footer strong {
     min-height: 44px;
   }
 
-  .phase-badge {
-    display: none;
-  }
-
   .workspace {
     position: relative;
     display: block;
@@ -4502,10 +4489,6 @@ footer strong {
 
   .topbar__actions {
     gap: 6px;
-  }
-
-  .phase-badge {
-    display: none;
   }
 
   .auth-button {

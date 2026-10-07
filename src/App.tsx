@@ -844,7 +844,6 @@ function App() {
             onCommunityChanged={() => setCommunityRevision((value) => value + 1)}
           />
           <LanguageSwitcher />
-          <div className="phase-badge">{t.app.phase}</div>
         </div>
       </header>
 
