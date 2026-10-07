@@ -110,4 +110,4 @@ Official GIS features are read-only portfolio data derived from the repository G
 
 - `v1.0.0`: frozen V1 release
 - `v2.0.0`: frozen V2 release
-- `feature/v3-serverless-portfolio`: isolated V3 implementation and deployment branch
+- `v3.0.0`: current serverless portfolio release
