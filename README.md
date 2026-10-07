@@ -2,7 +2,7 @@
 
 A bilingual, mobile-first WebGIS portfolio project for exploring Florida Keys dive sites, planning boat trips, matching recreational certifications to depth, and connecting divers with nearby dive centers.
 
-**Live demo:** V3 deployment URL will be added after the isolated Cloudflare release is verified.
+**Live demo:** https://dive-planner-webgis-v3.florida-keys-dive-planner.workers.dev
 
 ## Technology stack
 
