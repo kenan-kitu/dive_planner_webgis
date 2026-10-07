@@ -19,7 +19,7 @@ React, TypeScript, Vite, Leaflet, Turf.js, Cloudflare Workers, Static Assets, D1
 
 ## Screenshots
 
-Portfolio screenshots will be added after the public V3 URL is finalized and validated.
+The validated live V3 deployment above is the canonical portfolio preview.
 
 ## V3 architecture
 
