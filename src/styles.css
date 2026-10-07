@@ -2878,6 +2878,13 @@ select {
   opacity: 0.65;
 }
 
+.auth-dialog__hint {
+  margin: -6px 0 0;
+  color: #4c6970;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .auth-dialog__error {
   margin: 0;
   padding: 9px 10px;

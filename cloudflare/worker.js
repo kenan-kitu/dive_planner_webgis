@@ -1,4 +1,5 @@
 import { pbkdf2Sync, timingSafeEqual } from 'node:crypto'
+import { AUTH_PASSWORD_POLICY, meetsPasswordPolicy } from '../src/config/authPolicy.ts'
 
 const ITERATIONS = 100_000
 const SESSION_SECONDS = 43_200
@@ -46,8 +47,8 @@ function validEmail(value) {
   fail(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(result), 422, 'Invalid email address.'); return result
 }
 function validPassword(value) {
-  const result = cleanText(value, 'password', 12, 128)
-  fail(!/[a-z]/.test(result) || !/[A-Z]/.test(result) || !/\d/.test(result), 422, 'Password must include upper-case, lower-case and numeric characters.'); return result
+  const result = cleanText(value, 'password', AUTH_PASSWORD_POLICY.minLength, AUTH_PASSWORD_POLICY.maxLength)
+  fail(!meetsPasswordPolicy(result), 422, 'Password must include upper-case, lower-case and numeric characters.'); return result
 }
 function numeric(value, field, min, max, nullable = false) {
   if (nullable && (value === null || value === '')) return null

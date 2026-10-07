@@ -20,6 +20,13 @@ export interface RegisterInput {
   display_name: string
 }
 
+export class ApiRequestError extends Error {
+  constructor(public readonly status: number) {
+    super(`Request failed (${status})`)
+    this.name = 'ApiRequestError'
+  }
+}
+
 async function request<T>(
   path: `/api/${string}`,
   options: RequestInit = {},
@@ -34,10 +41,7 @@ async function request<T>(
   })
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as {
-      detail?: string
-    } | null
-    throw new Error(body?.detail ?? `Request failed (${response.status})`)
+    throw new ApiRequestError(response.status)
   }
 
   return (await response.json()) as T
