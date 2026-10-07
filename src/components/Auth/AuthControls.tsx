@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useLanguage } from '../../i18n/LanguageContext'
-import type { UserRole } from '../../services/auth'
+import { AUTH_PASSWORD_POLICY } from '../../config/authPolicy'
+import { ApiRequestError, type UserRole } from '../../services/auth'
 import { FavoriteSitesDialog } from './FavoriteSitesDialog'
 import { useAuth } from './AuthContext'
 import { AdminPanel } from '../Portal/AdminPanel'
@@ -62,8 +63,20 @@ export function AuthControls({
       setEmail('')
       setDisplayName('')
       closeDialog()
-    } catch {
-      setError(t.auth.requestFailed)
+    } catch (caught) {
+      if (mode !== 'register' || !(caught instanceof ApiRequestError)) {
+        setError(t.auth.requestFailed)
+      } else if (caught.status === 409) {
+        setError(t.auth.registerAlreadyExists)
+      } else if (caught.status === 422) {
+        setError(t.auth.registerValidation)
+      } else if (caught.status === 429) {
+        setError(t.auth.registerRateLimited)
+      } else if (caught.status === 403) {
+        setError(t.auth.registerForbidden)
+      } else {
+        setError(t.auth.registerFailed)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -128,13 +141,20 @@ export function AuthControls({
                 <input
                   type="password"
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  minLength={8}
-                  maxLength={128}
+                  minLength={mode === 'register' ? AUTH_PASSWORD_POLICY.minLength : undefined}
+                  maxLength={AUTH_PASSWORD_POLICY.maxLength}
+                  pattern={mode === 'register' ? AUTH_PASSWORD_POLICY.htmlPattern : undefined}
+                  aria-describedby={mode === 'register' ? 'password-requirements' : undefined}
                   required
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </label>
+              {mode === 'register' && (
+                <p id="password-requirements" className="auth-dialog__hint">
+                  {t.auth.passwordRequirements}
+                </p>
+              )}
               {error && <p className="auth-dialog__error">{error}</p>}
               <button className="auth-dialog__submit" type="submit" disabled={isSubmitting}>
                 {isSubmitting

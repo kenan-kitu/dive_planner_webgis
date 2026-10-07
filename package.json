@@ -13,6 +13,7 @@
     "test:filters": "node --experimental-strip-types scripts/verify-site-filtering.mts",
     "test:v3-data": "node --experimental-strip-types scripts/verify-v3-data.mts",
     "test:v3-api": "node scripts/verify-v3-api.mjs",
+    "test:auth-ux": "node --experimental-strip-types scripts/verify-v3-auth-ux.mts",
     "preview": "vite preview",
     "cloudflare:check": "wrangler deploy --dry-run --outdir .wrangler/dry-run"
   },
